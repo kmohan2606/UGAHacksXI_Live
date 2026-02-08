@@ -7,6 +7,9 @@ import {
   ChevronDown,
   ChevronUp,
   Sparkles,
+  AlertTriangle,
+  ShieldCheck,
+  Cloud,
 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -47,12 +50,24 @@ export function RouteCard({
     return `${km.toFixed(1)} km`;
   };
 
+  const hazardCount = route.nearbyHazards?.length ?? 0;
+  const hazardScore = route.hazardExposureScore ?? 0;
+
+  // Determine card border color based on hazard exposure
+  const getBorderColor = () => {
+    if (route.isHazardAvoiding) return "border-emerald-300 bg-emerald-50/20";
+    if (hazardScore > 50) return "border-red-200 bg-red-50/20";
+    if (hazardScore > 20) return "border-amber-200 bg-amber-50/20";
+    return "";
+  };
+
   return (
     <Card
       className={cn(
         "relative overflow-hidden transition-all duration-200 cursor-pointer hover:shadow-md",
         isSelected && "ring-2 ring-emerald-500 shadow-lg",
-        isRecommended && "border-emerald-200 bg-emerald-50/30"
+        isRecommended && "border-emerald-200 bg-emerald-50/30",
+        !isRecommended && !isSelected && getBorderColor()
       )}
       onClick={onSelect}
     >
@@ -73,7 +88,19 @@ export function RouteCard({
         </div>
 
         <div className="flex flex-wrap gap-2 mt-2">
-          {route.isEcoFriendly && (
+          {/* Hazard avoidance badge */}
+          {route.isHazardAvoiding ? (
+            <Badge
+              variant="secondary"
+              className="bg-emerald-100 text-emerald-700 border-emerald-200 gap-1"
+            >
+              <ShieldCheck className="h-3 w-3" />
+              Hazard-Avoiding
+            </Badge>
+          ) : null}
+
+          {/* Eco-friendly badge */}
+          {route.isEcoFriendly ? (
             <Badge
               variant="secondary"
               className="bg-emerald-100 text-emerald-700 border-emerald-200 gap-1"
@@ -81,16 +108,31 @@ export function RouteCard({
               <Leaf className="h-3 w-3" />
               Eco
             </Badge>
-          )}
-          {route.co2SavedKg !== undefined && route.co2SavedKg > 0 && (
+          ) : null}
+
+          {/* CO2 saved badge */}
+          {route.co2SavedKg !== undefined && route.co2SavedKg > 0 ? (
             <Badge
               variant="secondary"
               className="bg-green-100 text-green-700 border-green-200 gap-1"
             >
-              -{route.co2SavedKg.toFixed(1)} kg CO2
+              -{route.co2SavedKg.toFixed(1)} kg CO₂
             </Badge>
-          )}
-          {safetyScore !== undefined && (
+          ) : null}
+
+          {/* CO2 total badge */}
+          {route.co2Kg !== undefined ? (
+            <Badge
+              variant="secondary"
+              className="bg-gray-100 text-gray-600 border-gray-200 gap-1"
+            >
+              <Cloud className="h-3 w-3" />
+              {route.co2Kg.toFixed(1)} kg CO₂
+            </Badge>
+          ) : null}
+
+          {/* Safety score badge */}
+          {safetyScore !== undefined ? (
             <Badge
               variant="secondary"
               className={cn(
@@ -104,6 +146,32 @@ export function RouteCard({
             >
               <Shield className="h-3 w-3" />
               {safetyScore}% Safe
+            </Badge>
+          ) : null}
+
+          {/* Hazard exposure badge */}
+          {hazardCount > 0 ? (
+            <Badge
+              variant="secondary"
+              className={cn(
+                "gap-1",
+                hazardScore > 50
+                  ? "bg-red-100 text-red-700 border-red-200"
+                  : hazardScore > 20
+                  ? "bg-amber-100 text-amber-700 border-amber-200"
+                  : "bg-yellow-100 text-yellow-700 border-yellow-200"
+              )}
+            >
+              <AlertTriangle className="h-3 w-3" />
+              {hazardCount} hazard{hazardCount > 1 ? "s" : ""} nearby
+            </Badge>
+          ) : (
+            <Badge
+              variant="secondary"
+              className="bg-emerald-50 text-emerald-600 border-emerald-200 gap-1"
+            >
+              <ShieldCheck className="h-3 w-3" />
+              Hazard-free
             </Badge>
           )}
         </div>
@@ -125,7 +193,10 @@ export function RouteCard({
           </div>
         </div>
 
-        <RoutePolyline isEcoFriendly={route.isEcoFriendly} />
+        <RoutePolyline
+          isEcoFriendly={route.isEcoFriendly}
+          isHazardAvoiding={route.isHazardAvoiding}
+        />
 
         {route.steps.length > 0 && (
           <Collapsible open={isDirectionsOpen} onOpenChange={setIsDirectionsOpen}>
@@ -160,26 +231,36 @@ export function RouteCard({
   );
 }
 
-function RoutePolyline({ isEcoFriendly }: { isEcoFriendly: boolean }) {
+function RoutePolyline({
+  isEcoFriendly,
+  isHazardAvoiding,
+}: {
+  isEcoFriendly: boolean;
+  isHazardAvoiding?: boolean;
+}) {
+  const getColors = () => {
+    if (isHazardAvoiding && isEcoFriendly) return { from: "#10b981", to: "#059669" };
+    if (isHazardAvoiding) return { from: "#f59e0b", to: "#d97706" };
+    if (isEcoFriendly) return { from: "#10b981", to: "#059669" };
+    return { from: "#6366f1", to: "#4f46e5" };
+  };
+
+  const colors = getColors();
+  const gradientId = `routeGrad-${isHazardAvoiding ? "avoid" : ""}${isEcoFriendly ? "eco" : "fast"}`;
+
   return (
     <div className="relative h-8 w-full overflow-hidden rounded-lg bg-gray-100">
       <svg viewBox="0 0 200 30" className="w-full h-full" preserveAspectRatio="none">
         <defs>
-          <linearGradient id="routeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop
-              offset="0%"
-              stopColor={isEcoFriendly ? "#10b981" : "#6366f1"}
-            />
-            <stop
-              offset="100%"
-              stopColor={isEcoFriendly ? "#059669" : "#4f46e5"}
-            />
+          <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={colors.from} />
+            <stop offset="100%" stopColor={colors.to} />
           </linearGradient>
         </defs>
         <path
           d="M 5 15 Q 30 5, 50 15 T 100 15 T 150 15 T 195 15"
           fill="none"
-          stroke="url(#routeGradient)"
+          stroke={`url(#${gradientId})`}
           strokeWidth="4"
           strokeLinecap="round"
         />

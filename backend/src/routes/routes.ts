@@ -5,13 +5,21 @@ import type {
   RouteResponse,
   RouteOption,
   EnvironmentalData,
-  Camera,
   GeminiRecommendation,
+  HazardPoint,
+  NearbyHazard,
 } from "../types";
 import {
   generateRouteRecommendation,
   isGeminiConfigured,
 } from "../gemini";
+import {
+  decodePolyline,
+  findNearbyHazards,
+  generateAvoidanceWaypoints,
+  calculateHazardExposureScore,
+} from "../geo";
+import type { LatLng } from "../geo";
 
 const routesRouter = new Hono();
 
@@ -53,7 +61,10 @@ function stripHtml(html: string): string {
 async function fetchGoogleDirections(
   origin: string,
   destination: string,
-  avoidHighways: boolean = false
+  options: {
+    avoidHighways?: boolean;
+    waypoints?: LatLng[];
+  } = {}
 ): Promise<GoogleDirectionsResponse> {
   const apiKey = process.env.GOOGLE_MAPS_API_KEY;
   if (!apiKey) {
@@ -68,8 +79,18 @@ async function fetchGoogleDirections(
     units: "metric",
   });
 
-  if (avoidHighways) {
+  if (options.avoidHighways) {
     params.set("avoid", "highways");
+  }
+
+  // Add waypoints for hazard avoidance
+  if (options.waypoints && options.waypoints.length > 0) {
+    const waypointStr = options.waypoints
+      .map((wp) => `via:${wp.lat},${wp.lng}`)
+      .join("|");
+    params.set("waypoints", waypointStr);
+    // When using waypoints, don't request alternatives (Google ignores it anyway)
+    params.delete("alternatives");
   }
 
   const response = await fetch(
@@ -86,9 +107,14 @@ async function fetchGoogleDirections(
   return data;
 }
 
+// CO2 emission factors (kg CO2 per km)
+const CO2_HIGHWAY_KG_PER_KM = 0.21;
+const CO2_SURFACE_KG_PER_KM = 0.17;
+
 function parseGoogleRoutes(
   data: GoogleDirectionsResponse,
   isEcoFriendly: boolean,
+  isHazardAvoiding: boolean,
   fastestDistanceKm?: number
 ): RouteOption[] {
   return data.routes.map((route, index) => {
@@ -97,10 +123,9 @@ function parseGoogleRoutes(
     const durationMinutes = leg.duration.value / 60;
 
     // CO2 calculations
-    // Average car: ~0.21 kg CO2/km on highway, ~0.17 kg CO2/km on surface streets
-    const co2PerKm = isEcoFriendly ? 0.17 : 0.21;
+    const co2PerKm = isEcoFriendly ? CO2_SURFACE_KG_PER_KM : CO2_HIGHWAY_KG_PER_KM;
     const routeCo2 = distanceKm * co2PerKm;
-    const baselineCo2 = (fastestDistanceKm ?? distanceKm) * 0.21;
+    const baselineCo2 = (fastestDistanceKm ?? distanceKm) * CO2_HIGHWAY_KG_PER_KM;
     const co2SavedKg = Math.max(0, Number((baselineCo2 - routeCo2).toFixed(2)));
 
     const steps = leg.steps.map((step) => ({
@@ -109,17 +134,29 @@ function parseGoogleRoutes(
       durationMinutes: Number((step.duration.value / 60).toFixed(1)),
     }));
 
-    const routeName = isEcoFriendly
-      ? `Eco-Friendly via ${route.summary || "local roads"}`
-      : `Fastest via ${route.summary || "highway"}`;
+    // Build route name
+    let routeName: string;
+    if (isHazardAvoiding && isEcoFriendly) {
+      routeName = `Safe Eco via ${route.summary || "local roads"}`;
+    } else if (isHazardAvoiding) {
+      routeName = `Safe Route via ${route.summary || "alternate roads"}`;
+    } else if (isEcoFriendly) {
+      routeName = `Eco-Friendly via ${route.summary || "local roads"}`;
+    } else {
+      routeName = `Fastest via ${route.summary || "highway"}`;
+    }
+
+    const suffix = isHazardAvoiding ? "avoid" : isEcoFriendly ? "eco" : "fast";
 
     return {
-      id: `route-${isEcoFriendly ? "eco" : "fast"}-${index}`,
+      id: `route-${suffix}-${index}`,
       name: routeName,
       distanceKm: Number(distanceKm.toFixed(1)),
       durationMinutes: Number(durationMinutes.toFixed(0)),
       isEcoFriendly,
+      isHazardAvoiding,
       co2SavedKg,
+      co2Kg: Number(routeCo2.toFixed(2)),
       polyline: route.overview_polyline.points,
       steps,
     };
@@ -240,26 +277,97 @@ async function fetchAirQualityData(
 }
 
 // ==========================================
-// Hazard data from real camera analysis
+// Hazard data: cameras + community reports
 // ==========================================
 
-async function fetchHazardsFromCameras(): Promise<Camera[]> {
+async function fetchAllHazards(): Promise<HazardPoint[]> {
+  const hazardPoints: HazardPoint[] = [];
+
+  // 1. Fetch camera hazards
   try {
-    // Fetch the camera data from our own cameras endpoint (uses cached data)
     const backendUrl = process.env.BACKEND_URL || "http://localhost:3000";
-    const response = await fetch(`${backendUrl}/api/cameras/hazards/active`);
+    const cameraResponse = await fetch(`${backendUrl}/api/cameras/hazards/active`);
 
-    if (!response.ok) {
-      console.warn("[Routes] Failed to fetch camera hazards:", response.status);
-      return [];
+    if (cameraResponse.ok) {
+      const json = (await cameraResponse.json()) as {
+        data: Array<{
+          camId: string;
+          locationName: string;
+          lat: number;
+          lng: number;
+          currentStatus: {
+            hazard: boolean;
+            type: string;
+            severity: number;
+            geminiExplanation: string;
+          };
+        }>;
+      };
+
+      for (const cam of json.data ?? []) {
+        hazardPoints.push({
+          id: `cam-${cam.camId}`,
+          lat: cam.lat,
+          lng: cam.lng,
+          type: cam.currentStatus.type,
+          severity: cam.currentStatus.severity,
+          description: `${cam.locationName}: ${cam.currentStatus.geminiExplanation}`,
+          source: "camera",
+        });
+      }
     }
-
-    const json = (await response.json()) as { data: Camera[]; count: number };
-    return json.data ?? [];
   } catch (error) {
-    console.warn("[Routes] Error fetching camera hazards:", error);
-    return [];
+    console.warn("[Routes] Failed to fetch camera hazards:", error);
   }
+
+  // 2. Fetch community reports (verified or pending, not resolved)
+  try {
+    const backendUrl = process.env.BACKEND_URL || "http://localhost:3000";
+    const reportsResponse = await fetch(`${backendUrl}/api/reports`);
+
+    if (reportsResponse.ok) {
+      const json = (await reportsResponse.json()) as {
+        data: Array<{
+          reportId: string;
+          type: string;
+          description?: string;
+          lat: number;
+          lng: number;
+          status: string;
+          verifiedByAi: boolean;
+        }>;
+      };
+
+      // Severity mapping for community report types
+      const reportSeverity: Record<string, number> = {
+        flooding: 7,
+        obstruction: 6,
+        pothole: 5,
+        blocked_bike_lane: 4,
+        broken_charger: 3,
+        other: 4,
+      };
+
+      for (const report of json.data ?? []) {
+        // Only include non-resolved reports
+        if (report.status === "resolved") continue;
+
+        hazardPoints.push({
+          id: `report-${report.reportId}`,
+          lat: report.lat,
+          lng: report.lng,
+          type: report.type,
+          severity: reportSeverity[report.type] ?? 4,
+          description: report.description || `Community report: ${report.type}`,
+          source: "report",
+        });
+      }
+    }
+  } catch (error) {
+    console.warn("[Routes] Failed to fetch community reports:", error);
+  }
+
+  return hazardPoints;
 }
 
 // ==========================================
@@ -269,11 +377,9 @@ async function fetchHazardsFromCameras(): Promise<Camera[]> {
 function generateFallbackRecommendation(
   routes: RouteOption[],
   environmental: EnvironmentalData,
-  hazards: Camera[],
+  hazards: HazardPoint[],
   preferEco: boolean
 ): GeminiRecommendation {
-  const ecoRoute = routes.find((r) => r.isEcoFriendly);
-  const fastestRoute = routes.find((r) => !r.isEcoFriendly);
   const defaultRoute = routes[0];
 
   if (!defaultRoute) {
@@ -285,29 +391,45 @@ function generateFallbackRecommendation(
     };
   }
 
-  const activeHazards = hazards.filter((h) => h.currentStatus.hazard);
+  // Prefer hazard-avoiding routes if available
+  const safeRoute = routes.find((r) => r.isHazardAvoiding);
+  const ecoRoute = routes.find((r) => r.isEcoFriendly && !r.isHazardAvoiding);
+  const safeEcoRoute = routes.find((r) => r.isEcoFriendly && r.isHazardAvoiding);
+  const fastestRoute = routes.find((r) => !r.isEcoFriendly && !r.isHazardAvoiding);
+
+  const activeHazards = hazards.length;
+
+  // Priority: safe-eco > safe > eco > fast
+  if (preferEco && safeEcoRoute) {
+    return {
+      recommendedRouteId: safeEcoRoute.id,
+      reasoning: `The safest eco-friendly route avoids ${activeHazards} hazard(s) and saves ${safeEcoRoute.co2SavedKg ?? 0}kg CO2. Estimated emissions: ${safeEcoRoute.co2Kg ?? 0}kg CO2. Current AQI: ${environmental.airQualityIndex}.`,
+      safetyScore: 90,
+      ecoScore: 92,
+    };
+  }
+
+  if (activeHazards > 0 && safeRoute) {
+    return {
+      recommendedRouteId: safeRoute.id,
+      reasoning: `${activeHazards} hazard(s) detected near standard routes. This alternate route avoids them with exposure score of ${safeRoute.hazardExposureScore ?? 0}/100. Estimated emissions: ${safeRoute.co2Kg ?? 0}kg CO2.`,
+      safetyScore: 88,
+      ecoScore: safeRoute.isEcoFriendly ? 85 : 50,
+    };
+  }
 
   if (preferEco && ecoRoute) {
     return {
       recommendedRouteId: ecoRoute.id,
-      reasoning: `The eco-friendly route saves approximately ${ecoRoute.co2SavedKg ?? 0}kg CO2. Current conditions: ${environmental.weatherCondition} at ${environmental.temperature}°F with AQI ${environmental.airQualityIndex}.`,
+      reasoning: `The eco-friendly route saves approximately ${ecoRoute.co2SavedKg ?? 0}kg CO2 (${ecoRoute.co2Kg ?? 0}kg total). Current conditions: ${environmental.weatherCondition} at ${environmental.temperature}°F with AQI ${environmental.airQualityIndex}.`,
       safetyScore: 85,
       ecoScore: 92,
     };
   }
 
-  if (activeHazards.length > 0 && ecoRoute) {
-    return {
-      recommendedRouteId: ecoRoute.id,
-      reasoning: `${activeHazards.length} active hazard(s) detected on highway routes. The eco-friendly alternative avoids these hazards and saves ${ecoRoute.co2SavedKg ?? 0}kg CO2.`,
-      safetyScore: 80,
-      ecoScore: 88,
-    };
-  }
-
   return {
     recommendedRouteId: fastestRoute?.id ?? defaultRoute.id,
-    reasoning: `The fastest route is recommended. Current conditions: ${environmental.weatherCondition} at ${environmental.temperature}°F. Traffic conditions appear normal.`,
+    reasoning: `The fastest route is recommended with ${(fastestRoute ?? defaultRoute).co2Kg ?? 0}kg CO2 emissions. Current conditions: ${environmental.weatherCondition} at ${environmental.temperature}°F. Traffic conditions appear normal.`,
     safetyScore: 85,
     ecoScore: 45,
   };
@@ -324,63 +446,50 @@ routesRouter.post(
     const request = c.req.valid("json");
 
     console.log(
-      `[Routes] Planning route: ${request.origin} → ${request.destination} (eco: ${request.preferEco})`
+      `[Routes] Planning route: ${request.origin} → ${request.destination} (eco: ${request.preferEco}, avoidHazards: ${request.avoidHazards})`
     );
 
     try {
-      // Step 1: Fetch real data in parallel
-      const [fastDirections, ecoDirections, weatherResult, aqiResult, hazards] =
+      // Step 1: Fetch initial routes + environmental data + hazards in parallel
+      const [fastDirections, ecoDirections, weatherResult, aqiResult, allHazards] =
         await Promise.allSettled([
-          fetchGoogleDirections(request.origin, request.destination, false),
-          fetchGoogleDirections(request.origin, request.destination, true),
+          fetchGoogleDirections(request.origin, request.destination),
+          fetchGoogleDirections(request.origin, request.destination, { avoidHighways: true }),
           fetchWeatherData(request.originLat, request.originLng),
           fetchAirQualityData(request.originLat, request.originLng),
-          fetchHazardsFromCameras(),
+          fetchAllHazards(),
         ]);
 
-      // Step 2: Parse routes from Google Maps
+      // Step 2: Parse initial routes from Google Maps
       let routes: RouteOption[] = [];
 
       if (fastDirections.status === "fulfilled") {
-        const fastRoutes = parseGoogleRoutes(
-          fastDirections.value,
-          false
-        );
-        // Only take the first (fastest) route
+        const fastRoutes = parseGoogleRoutes(fastDirections.value, false, false);
         if (fastRoutes[0]) {
           routes.push(fastRoutes[0]);
         }
       } else {
-        console.error(
-          "[Routes] Google Directions (fast) failed:",
-          fastDirections.reason
-        );
+        console.error("[Routes] Google Directions (fast) failed:", fastDirections.reason);
       }
 
+      const fastestDistanceKm = routes[0]?.distanceKm;
+
       if (ecoDirections.status === "fulfilled") {
-        const fastestDistanceKm = routes[0]?.distanceKm;
         const ecoRoutes = parseGoogleRoutes(
-          ecoDirections.value,
-          true,
-          fastestDistanceKm
+          ecoDirections.value, true, false, fastestDistanceKm
         );
-        // Only take the first eco route
         if (ecoRoutes[0]) {
           routes.push(ecoRoutes[0]);
         }
       } else {
-        console.error(
-          "[Routes] Google Directions (eco) failed:",
-          ecoDirections.reason
-        );
+        console.error("[Routes] Google Directions (eco) failed:", ecoDirections.reason);
       }
 
       if (routes.length === 0) {
         return c.json(
           {
             error: {
-              message:
-                "Failed to fetch route directions. Please check the origin and destination.",
+              message: "Failed to fetch route directions. Please check the origin and destination.",
               code: "DIRECTIONS_FAILED",
             },
           },
@@ -388,23 +497,97 @@ routesRouter.post(
         );
       }
 
-      // Step 3: Build environmental data from real APIs
+      // Step 3: Get all hazard points
+      const hazards: HazardPoint[] =
+        allHazards.status === "fulfilled" ? allHazards.value : [];
+
+      console.log(`[Routes] Found ${hazards.length} total hazard points (cameras + reports)`);
+
+      // Step 4: For each route, find nearby hazards and score
+      const HAZARD_RADIUS_METERS = 500;
+
+      for (const route of routes) {
+        const polylinePoints = decodePolyline(route.polyline);
+        const nearby = findNearbyHazards(polylinePoints, hazards, HAZARD_RADIUS_METERS);
+        route.nearbyHazards = nearby;
+        route.hazardExposureScore = calculateHazardExposureScore(nearby);
+      }
+
+      // Step 5: Generate hazard-avoiding routes if needed
+      if (request.avoidHazards && hazards.length > 0) {
+        for (const route of [...routes]) {
+          const nearby = route.nearbyHazards ?? [];
+          if (nearby.length === 0) continue;
+
+          console.log(
+            `[Routes] Route "${route.name}" has ${nearby.length} nearby hazard(s). Generating avoidance route...`
+          );
+
+          try {
+            const polylinePoints = decodePolyline(route.polyline);
+            const waypoints = generateAvoidanceWaypoints(polylinePoints, nearby);
+
+            if (waypoints.length > 0) {
+              // Limit to 5 waypoints (Google API limit is 25 but fewer = better routes)
+              const limitedWaypoints = waypoints.slice(0, 5);
+
+              const avoidDirections = await fetchGoogleDirections(
+                request.origin,
+                request.destination,
+                {
+                  avoidHighways: route.isEcoFriendly,
+                  waypoints: limitedWaypoints,
+                }
+              );
+
+              const avoidRoutes = parseGoogleRoutes(
+                avoidDirections,
+                route.isEcoFriendly,
+                true, // isHazardAvoiding
+                fastestDistanceKm
+              );
+
+              if (avoidRoutes[0]) {
+                // Score the avoidance route too
+                const avoidPolyline = decodePolyline(avoidRoutes[0].polyline);
+                const avoidNearby = findNearbyHazards(
+                  avoidPolyline, hazards, HAZARD_RADIUS_METERS
+                );
+                avoidRoutes[0].nearbyHazards = avoidNearby;
+                avoidRoutes[0].hazardExposureScore = calculateHazardExposureScore(avoidNearby);
+
+                // Only add if it actually reduces hazard exposure
+                if (
+                  avoidRoutes[0].hazardExposureScore <
+                  (route.hazardExposureScore ?? 100)
+                ) {
+                  routes.push(avoidRoutes[0]);
+                  console.log(
+                    `[Routes] Avoidance route added: exposure ${avoidRoutes[0].hazardExposureScore} vs original ${route.hazardExposureScore}`
+                  );
+                } else {
+                  console.log(
+                    `[Routes] Avoidance route not better: exposure ${avoidRoutes[0].hazardExposureScore} vs original ${route.hazardExposureScore}`
+                  );
+                }
+              }
+            }
+          } catch (error) {
+            console.error(`[Routes] Failed to generate avoidance route for "${route.name}":`, error);
+          }
+        }
+      }
+
+      // Step 6: Build environmental data
       const weather =
         weatherResult.status === "fulfilled"
           ? weatherResult.value
-          : {
-              temperature: 72,
-              weatherCondition: "Data unavailable",
-              humidity: 50,
-            };
+          : { temperature: 72, weatherCondition: "Data unavailable", humidity: 50 };
 
       const aqi =
         aqiResult.status === "fulfilled"
           ? aqiResult.value
-          : {
-              airQualityIndex: 50,
-              airQualityDescription: "Data temporarily unavailable",
-            };
+          : { airQualityIndex: 50, airQualityDescription: "Data temporarily unavailable" };
 
       const environmental: EnvironmentalData = {
         airQualityIndex: aqi.airQualityIndex,
@@ -414,11 +597,27 @@ routesRouter.post(
         humidity: weather.humidity,
       };
 
-      // Step 4: Get real hazard data from camera analysis
-      const hazardsOnRoute: Camera[] =
-        hazards.status === "fulfilled" ? hazards.value : [];
+      // Step 7: Collect all unique hazards near any route for the response
+      const allNearbyHazardIds = new Set<string>();
+      const allNearbyHazards: HazardPoint[] = [];
+      for (const route of routes) {
+        for (const h of route.nearbyHazards ?? []) {
+          if (!allNearbyHazardIds.has(h.id)) {
+            allNearbyHazardIds.add(h.id);
+            allNearbyHazards.push({
+              id: h.id,
+              lat: h.lat,
+              lng: h.lng,
+              type: h.type,
+              severity: h.severity,
+              description: h.description,
+              source: h.source,
+            });
+          }
+        }
+      }
 
-      // Step 5: Generate AI recommendation with Gemini (or fallback)
+      // Step 8: Generate AI recommendation with Gemini (or fallback)
       let recommendation: GeminiRecommendation;
 
       if (isGeminiConfigured()) {
@@ -426,39 +625,30 @@ routesRouter.post(
           recommendation = await generateRouteRecommendation(
             routes,
             environmental,
-            hazardsOnRoute,
+            hazards,
             request.preferEco ?? false
           );
         } catch (error) {
-          console.error(
-            "[Routes] Gemini recommendation failed, using fallback:",
-            error
-          );
+          console.error("[Routes] Gemini recommendation failed, using fallback:", error);
           recommendation = generateFallbackRecommendation(
-            routes,
-            environmental,
-            hazardsOnRoute,
-            request.preferEco ?? false
+            routes, environmental, hazards, request.preferEco ?? false
           );
         }
       } else {
         recommendation = generateFallbackRecommendation(
-          routes,
-          environmental,
-          hazardsOnRoute,
-          request.preferEco ?? false
+          routes, environmental, hazards, request.preferEco ?? false
         );
       }
 
       const response: RouteResponse = {
         routes,
         environmental,
-        hazardsOnRoute,
+        hazardsOnRoute: allNearbyHazards,
         recommendation,
       };
 
       console.log(
-        `[Routes] Route planned successfully: ${routes.length} routes, AQI ${environmental.airQualityIndex}, ${environmental.weatherCondition}`
+        `[Routes] Route planned: ${routes.length} routes, ${allNearbyHazards.length} hazards nearby, AQI ${environmental.airQualityIndex}`
       );
 
       return c.json({ data: response });
@@ -468,9 +658,7 @@ routesRouter.post(
         {
           error: {
             message:
-              error instanceof Error
-                ? error.message
-                : "Failed to plan route",
+              error instanceof Error ? error.message : "Failed to plan route",
             code: "ROUTE_PLANNING_FAILED",
           },
         },

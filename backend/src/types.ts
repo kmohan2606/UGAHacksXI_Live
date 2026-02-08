@@ -81,6 +81,28 @@ export const CreateReportRequestSchema = z.object({
 export type CreateReportRequest = z.infer<typeof CreateReportRequestSchema>;
 
 // ==========================================
+// Unified Hazard Point (cameras + community reports)
+// ==========================================
+
+export const HazardPointSchema = z.object({
+  id: z.string(),
+  lat: z.number(),
+  lng: z.number(),
+  type: z.string(),
+  severity: z.number().min(0).max(10),
+  description: z.string(),
+  source: z.enum(["camera", "report"]),
+});
+
+export type HazardPoint = z.infer<typeof HazardPointSchema>;
+
+export const NearbyHazardSchema = HazardPointSchema.extend({
+  distanceMeters: z.number(),
+});
+
+export type NearbyHazard = z.infer<typeof NearbyHazardSchema>;
+
+// ==========================================
 // Route Planning Types
 // ==========================================
 
@@ -90,7 +112,11 @@ export const RouteOptionSchema = z.object({
   distanceKm: z.number(),
   durationMinutes: z.number(),
   isEcoFriendly: z.boolean(),
+  isHazardAvoiding: z.boolean().optional(),
   co2SavedKg: z.number().optional(),
+  co2Kg: z.number().optional(),
+  hazardExposureScore: z.number().min(0).max(100).optional(),
+  nearbyHazards: z.array(NearbyHazardSchema).optional(),
   polyline: z.string(),
   steps: z.array(
     z.object({
@@ -140,7 +166,7 @@ export type GeminiRecommendation = z.infer<typeof GeminiRecommendationSchema>;
 export const RouteResponseSchema = z.object({
   routes: z.array(RouteOptionSchema),
   environmental: EnvironmentalDataSchema,
-  hazardsOnRoute: z.array(CameraSchema),
+  hazardsOnRoute: z.array(HazardPointSchema),
   recommendation: GeminiRecommendationSchema,
 });
 

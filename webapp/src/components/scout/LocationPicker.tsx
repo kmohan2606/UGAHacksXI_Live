@@ -1,13 +1,13 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MapPin, Navigation, Loader2, Check } from "lucide-react";
 
-// Default Atlanta coordinates
+// Default coordinates (UGA area)
 const ATLANTA_DEFAULT = {
-  lat: 33.749,
-  lng: -84.388,
+  lat: 33.95184758240007,
+  lng: -83.37598727067142,
 };
 
 interface LocationData {
@@ -26,12 +26,17 @@ export function LocationPicker({
   onLocationChange,
 }: LocationPickerProps) {
   const [isLocating, setIsLocating] = useState(false);
+  const [isRefining, setIsRefining] = useState(false);
   const [manualAddress, setManualAddress] = useState("");
   const [locationError, setLocationError] = useState<string | null>(null);
+  const onLocationChangeRef = useRef(onLocationChange);
+  onLocationChangeRef.current = onLocationChange;
+  const gotHighAccuracy = useRef(false);
 
-  const handleUseCurrentLocation = useCallback(async () => {
+  const handleUseCurrentLocation = useCallback(() => {
     setIsLocating(true);
     setLocationError(null);
+    gotHighAccuracy.current = false;
 
     if (!navigator.geolocation) {
       setLocationError("Geolocation is not supported by your browser");
@@ -39,39 +44,86 @@ export function LocationPicker({
       return;
     }
 
+    // Step 1: Get a fast, low-accuracy position immediately
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        onLocationChange({
+        // Got a fast fix — show it right away
+        onLocationChangeRef.current({
           lat: position.coords.latitude,
           lng: position.coords.longitude,
-          address: "Current location",
+          address: "Current location (approximate)",
         });
         setIsLocating(false);
+
+        // Step 2: Refine with high-accuracy GPS in background
+        if (!gotHighAccuracy.current) {
+          setIsRefining(true);
+          navigator.geolocation.getCurrentPosition(
+            (precisePosition) => {
+              gotHighAccuracy.current = true;
+              onLocationChangeRef.current({
+                lat: precisePosition.coords.latitude,
+                lng: precisePosition.coords.longitude,
+                address: "Current location",
+              });
+              setIsRefining(false);
+            },
+            () => {
+              // High-accuracy failed — the fast position is good enough
+              setIsRefining(false);
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 20000,
+              maximumAge: 0,
+            }
+          );
+        }
       },
       (error) => {
-        console.error("Geolocation error:", error);
-        let errorMessage = "Unable to get your location";
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = "Location permission denied. Please enable location access.";
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = "Location information unavailable";
-            break;
-          case error.TIMEOUT:
-            errorMessage = "Location request timed out";
-            break;
-        }
-        setLocationError(errorMessage);
-        setIsLocating(false);
+        console.error("Geolocation error (fast):", error);
+
+        // Fast attempt failed — try one more time with longer timeout and no high accuracy requirement
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            onLocationChangeRef.current({
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+              address: "Current location",
+            });
+            setIsLocating(false);
+          },
+          (retryError) => {
+            console.error("Geolocation retry error:", retryError);
+            let errorMessage = "Unable to get your location";
+            switch (retryError.code) {
+              case retryError.PERMISSION_DENIED:
+                errorMessage = "Location permission denied. Please enable location access.";
+                break;
+              case retryError.POSITION_UNAVAILABLE:
+                errorMessage = "Location information unavailable";
+                break;
+              case retryError.TIMEOUT:
+                errorMessage = "Location request timed out. Try again or use a default.";
+                break;
+            }
+            setLocationError(errorMessage);
+            setIsLocating(false);
+          },
+          {
+            enableHighAccuracy: false,
+            timeout: 15000,
+            maximumAge: 120000,
+          }
+        );
       },
       {
-        enableHighAccuracy: true,
-        timeout: 10000,
+        enableHighAccuracy: false,
+        timeout: 5000,
         maximumAge: 60000,
       }
     );
-  }, [onLocationChange]);
+  }, []);
 
   const handleUseAtlantaDefault = () => {
     onLocationChange({
@@ -105,7 +157,11 @@ export function LocationPicker({
         <div className="rounded-xl border-2 border-green-200 bg-green-50 p-4">
           <div className="flex items-start gap-3">
             <div className="rounded-full p-2 bg-green-100 text-green-600 shrink-0">
-              <Check className="h-4 w-4" />
+              {isRefining ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Check className="h-4 w-4" />
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-medium text-green-700 text-sm">
@@ -113,6 +169,7 @@ export function LocationPicker({
               </p>
               <p className="text-xs text-green-600 mt-0.5">
                 {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
+                {isRefining ? " · Refining accuracy..." : ""}
               </p>
             </div>
             <Button

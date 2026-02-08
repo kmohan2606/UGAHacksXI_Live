@@ -7,7 +7,7 @@ import type {
   GeminiRecommendation,
   RouteOption,
   EnvironmentalData,
-  Camera,
+  HazardPoint,
   HazardType,
   ReportType,
 } from "./types";
@@ -221,7 +221,7 @@ Rules:
 export async function generateRouteRecommendation(
   routes: RouteOption[],
   environmental: EnvironmentalData,
-  hazards: Camera[],
+  hazards: HazardPoint[],
   preferEco: boolean
 ): Promise<GeminiRecommendation> {
   const routeSummary = routes.map((r) => ({
@@ -230,22 +230,37 @@ export async function generateRouteRecommendation(
     distanceKm: r.distanceKm,
     durationMinutes: r.durationMinutes,
     isEcoFriendly: r.isEcoFriendly,
-    co2SavedKg: r.co2SavedKg,
+    isHazardAvoiding: r.isHazardAvoiding ?? false,
+    co2Kg: r.co2Kg ?? 0,
+    co2SavedKg: r.co2SavedKg ?? 0,
+    hazardExposureScore: r.hazardExposureScore ?? 0,
+    nearbyHazardCount: r.nearbyHazards?.length ?? 0,
+    nearbyHazardDetails: (r.nearbyHazards ?? []).map((h) => ({
+      type: h.type,
+      severity: h.severity,
+      distanceMeters: h.distanceMeters,
+      source: h.source,
+    })),
   }));
 
-  const hazardSummary = hazards
-    .filter((h) => h.currentStatus.hazard)
-    .map((h) => ({
-      location: h.locationName,
-      type: h.currentStatus.type,
-      severity: h.currentStatus.severity,
-      description: h.currentStatus.geminiExplanation,
-    }));
+  const hazardSummary = hazards.map((h) => ({
+    type: h.type,
+    severity: h.severity,
+    description: h.description,
+    source: h.source,
+  }));
 
-  const prompt = `You are GreenCommute AI, an intelligent commute advisor for Atlanta, Georgia. Based on the following real-time data, recommend the best route.
+  const prompt = `You are GreenCommute AI, an intelligent commute advisor for Atlanta, Georgia. Based on the following real-time data, recommend the best route. Factor in hazard avoidance, air quality, and carbon emissions.
 
-Available Routes:
+Available Routes (with per-route hazard and emission data):
 ${JSON.stringify(routeSummary, null, 2)}
+
+Key metrics per route:
+- co2Kg: total estimated CO2 emissions for this route
+- co2SavedKg: CO2 saved compared to fastest route
+- hazardExposureScore: 0 = safest (no nearby hazards), 100 = most exposed
+- isHazardAvoiding: true if this route was generated to avoid known hazards
+- nearbyHazardDetails: specific hazards within 500m of the route
 
 Current Environmental Conditions:
 - Air Quality Index: ${environmental.airQualityIndex} (${environmental.airQualityDescription})
@@ -254,18 +269,24 @@ Current Environmental Conditions:
 - Humidity: ${environmental.humidity}%
 ${environmental.uvIndex ? `- UV Index: ${environmental.uvIndex}` : ""}
 
-Active Hazards Along Routes:
+All Known Hazards in the Area:
 ${hazardSummary.length > 0 ? JSON.stringify(hazardSummary, null, 2) : "None currently detected"}
 
-User Preference: ${preferEco ? "User prefers eco-friendly routes" : "No specific preference (optimize for speed and safety)"}
+User Preference: ${preferEco ? "User prefers eco-friendly routes with lower emissions" : "No specific preference (optimize for speed and safety)"}
+
+Decision criteria (in priority order):
+1. SAFETY: Strongly prefer routes with lower hazardExposureScore (fewer/less-severe hazards nearby)
+2. AIR QUALITY: If AQI > 100, favor routes that reduce time spent in poor-air-quality zones
+3. EMISSIONS: Prefer routes with lower co2Kg, especially if user prefers eco
+4. SPEED: Among equally safe/clean routes, prefer shorter duration
 
 Respond ONLY with a valid JSON object (no markdown fences, no extra text):
 {
   "recommendedRouteId": "the id of the recommended route from the list above",
-  "reasoning": "2-3 detailed sentences explaining your recommendation, referencing specific real-time conditions like weather, AQI, hazards, and CO2 savings",
-  "healthAdvisory": "health advisory string if AQI > 100 or extreme weather conditions, otherwise null",
-  "safetyScore": number (0-100, based on hazards and conditions),
-  "ecoScore": number (0-100, based on environmental impact of the route)
+  "reasoning": "2-3 detailed sentences explaining your recommendation, specifically referencing hazard exposure scores, CO2 emissions in kg, AQI, and how the route avoids specific hazard types",
+  "healthAdvisory": "health advisory string if AQI > 100 or hazardExposureScore > 50 or extreme weather, otherwise null",
+  "safetyScore": number (0-100, inversely proportional to hazardExposureScore of recommended route),
+  "ecoScore": number (0-100, based on co2Kg relative to other routes and AQI)
 }`;
 
   const text = await callGeminiAPI([{ text: prompt }]);
