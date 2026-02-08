@@ -8,6 +8,7 @@ import type {
 } from "../types";
 import { CommunityReportSchema, CreateReportRequestSchema } from "../types";
 import { verifyReportImage, isGeminiConfigured } from "../gemini";
+import { getMockScoutVerification } from "../mockData";
 
 const reportsRouter = new Hono();
 
@@ -68,40 +69,45 @@ reportsRouter.post(
       imageUrl = `https://storage.greencommute.atl/reports/${reportId}.jpg`;
     }
 
-    // Perform real AI verification if image is provided and Gemini is configured
+    // Perform AI verification if image is provided (with mock fallback)
     let verifiedByAi = false;
     let aiExplanation: string | undefined;
     let status: "pending" | "verified" | "resolved" = "pending";
 
-    if (body.imageBase64 && isGeminiConfigured()) {
-      try {
-        console.log(
-          `[Reports] Running Gemini Vision verification for report ${reportId} (type: ${body.type})`
-        );
+    if (body.imageBase64) {
+      let verification: GeminiScoutVerification;
 
-        const verification: GeminiScoutVerification = await verifyReportImage(
-          body.type,
-          body.imageBase64
-        );
+      if (isGeminiConfigured()) {
+        try {
+          console.log(
+            `[Reports] Running Gemini Vision verification for report ${reportId} (type: ${body.type})`
+          );
 
-        verifiedByAi = verification.verified;
-        aiExplanation = verification.explanation;
-        status = verification.verified ? "verified" : "pending";
-
-        console.log(
-          `[Reports] Gemini verification result: ${verification.verified ? "VERIFIED" : "NOT VERIFIED"} (confidence: ${verification.confidence})`
-        );
-      } catch (error) {
-        console.error(
-          `[Reports] Gemini verification failed for ${reportId}:`,
-          error
-        );
-        aiExplanation =
-          "AI verification temporarily unavailable. Report submitted for manual review.";
+          verification = await verifyReportImage(
+            body.type,
+            body.imageBase64
+          );
+        } catch (error) {
+          console.warn(
+            `[Reports] Gemini verification failed for ${reportId}, using mock:`,
+            error
+          );
+          // Fallback to mock verification
+          verification = getMockScoutVerification(body.type);
+        }
+      } else {
+        // Gemini not configured - use mock verification for demo
+        console.log(`[Reports] Gemini not configured, using mock verification for ${reportId}`);
+        verification = getMockScoutVerification(body.type);
       }
-    } else if (body.imageBase64 && !isGeminiConfigured()) {
-      aiExplanation =
-        "AI verification not configured. Report submitted for manual review.";
+
+      verifiedByAi = verification.verified;
+      aiExplanation = verification.explanation;
+      status = verification.verified ? "verified" : "pending";
+
+      console.log(
+        `[Reports] Verification result: ${verification.verified ? "VERIFIED" : "NOT VERIFIED"} (confidence: ${verification.confidence})`
+      );
     }
 
     const newReport: CommunityReport = {

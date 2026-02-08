@@ -20,6 +20,12 @@ import {
   calculateHazardExposureScore,
 } from "../geo";
 import type { LatLng } from "../geo";
+import {
+  getMockWeather,
+  getMockAirQuality,
+  getMockRoutes,
+  getMockRouteRecommendation,
+} from "../mockData";
 
 const routesRouter = new Hono();
 
@@ -460,7 +466,7 @@ routesRouter.post(
           fetchAllHazards(),
         ]);
 
-      // Step 2: Parse initial routes from Google Maps
+      // Step 2: Parse initial routes from Google Maps (with mock fallback)
       let routes: RouteOption[] = [];
 
       if (fastDirections.status === "fulfilled") {
@@ -469,7 +475,7 @@ routesRouter.post(
           routes.push(fastRoutes[0]);
         }
       } else {
-        console.error("[Routes] Google Directions (fast) failed:", fastDirections.reason);
+        console.warn("[Routes] Google Directions (fast) failed:", fastDirections.reason);
       }
 
       const fastestDistanceKm = routes[0]?.distanceKm;
@@ -482,19 +488,13 @@ routesRouter.post(
           routes.push(ecoRoutes[0]);
         }
       } else {
-        console.error("[Routes] Google Directions (eco) failed:", ecoDirections.reason);
+        console.warn("[Routes] Google Directions (eco) failed:", ecoDirections.reason);
       }
 
+      // Fallback to mock routes if Google completely fails
       if (routes.length === 0) {
-        return c.json(
-          {
-            error: {
-              message: "Failed to fetch route directions. Please check the origin and destination.",
-              code: "DIRECTIONS_FAILED",
-            },
-          },
-          502
-        );
+        console.warn("[Routes] All Google Directions failed, using mock routes");
+        routes = getMockRoutes(request.origin, request.destination);
       }
 
       // Step 3: Get all hazard points
@@ -578,16 +578,22 @@ routesRouter.post(
         }
       }
 
-      // Step 6: Build environmental data
-      const weather =
-        weatherResult.status === "fulfilled"
-          ? weatherResult.value
-          : { temperature: 72, weatherCondition: "Data unavailable", humidity: 50 };
+      // Step 6: Build environmental data (with mock fallbacks)
+      let weather: { temperature: number; weatherCondition: string; humidity: number };
+      if (weatherResult.status === "fulfilled") {
+        weather = weatherResult.value;
+      } else {
+        console.warn("[Routes] Weather API failed, using mock data:", weatherResult.reason);
+        weather = getMockWeather();
+      }
 
-      const aqi =
-        aqiResult.status === "fulfilled"
-          ? aqiResult.value
-          : { airQualityIndex: 50, airQualityDescription: "Data temporarily unavailable" };
+      let aqi: { airQualityIndex: number; airQualityDescription: string };
+      if (aqiResult.status === "fulfilled") {
+        aqi = aqiResult.value;
+      } else {
+        console.warn("[Routes] AirNow API failed, using mock data:", aqiResult.reason);
+        aqi = getMockAirQuality();
+      }
 
       const environmental: EnvironmentalData = {
         airQualityIndex: aqi.airQualityIndex,

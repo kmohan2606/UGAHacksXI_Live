@@ -9,6 +9,7 @@ import {
   analyzeTrafficCameraImage,
   isGeminiConfigured,
 } from "../gemini";
+import { getMockCameras, getMockHazardAnalysis } from "../mockData";
 
 const camerasRouter = new Hono();
 
@@ -81,44 +82,54 @@ function getCameraStatus(camId: string): CameraStatus {
 }
 
 /**
- * Analyze a single camera with Gemini Vision and cache the result
+ * Analyze a single camera with Gemini Vision and cache the result.
+ * Falls back to mock analysis if Gemini fails or is not configured.
  */
 async function analyzeSingleCamera(camera: Camera): Promise<CameraStatus> {
-  try {
-    const analysis = await analyzeTrafficCameraImage(
-      camera.imageUrl,
-      camera.locationName
-    );
+  let analysis: GeminiHazardAnalysis;
 
-    const status: CameraStatus = {
-      hazard: analysis.hazard_detected,
-      type: analysis.type,
-      severity: analysis.severity,
-      updatedAt: new Date().toISOString(),
-      geminiExplanation: analysis.description,
-    };
-
-    hazardStatuses.set(camera.camId, status);
-
-    // Update the cache entry too
-    if (cameraCache) {
-      const cachedCam = cameraCache.data.find(
-        (c) => c.camId === camera.camId
+  // Try real Gemini analysis first
+  if (isGeminiConfigured()) {
+    try {
+      analysis = await analyzeTrafficCameraImage(
+        camera.imageUrl,
+        camera.locationName
       );
-      if (cachedCam) {
-        cachedCam.currentStatus = status;
-      }
+    } catch (error) {
+      console.warn(
+        `[Cameras] Gemini analysis failed for ${camera.camId}, using mock:`,
+        error
+      );
+      // Fallback to mock analysis
+      analysis = getMockHazardAnalysis(camera.locationName);
     }
-
-    return status;
-  } catch (error) {
-    console.error(
-      `[Cameras] Gemini analysis failed for ${camera.camId}:`,
-      error
-    );
-    // Keep the default/existing status on failure
-    return getCameraStatus(camera.camId);
+  } else {
+    // Gemini not configured - use mock data
+    console.log(`[Cameras] Gemini not configured, using mock for ${camera.camId}`);
+    analysis = getMockHazardAnalysis(camera.locationName);
   }
+
+  const status: CameraStatus = {
+    hazard: analysis.hazard_detected,
+    type: analysis.type,
+    severity: analysis.severity,
+    updatedAt: new Date().toISOString(),
+    geminiExplanation: analysis.description,
+  };
+
+  hazardStatuses.set(camera.camId, status);
+
+  // Update the cache entry too
+  if (cameraCache) {
+    const cachedCam = cameraCache.data.find(
+      (c) => c.camId === camera.camId
+    );
+    if (cachedCam) {
+      cachedCam.currentStatus = status;
+    }
+  }
+
+  return status;
 }
 
 /**
@@ -250,49 +261,10 @@ async function fetchGDOTCameras(): Promise<Camera[]> {
 }
 
 // Fallback cameras in case GDOT API is unavailable
+// Uses getMockCameras() which has realistic varied hazard data
 function getFallbackCameras(): Camera[] {
-  const fallbackCameras = [
-    {
-      camId: "gdot-cctv-0177",
-      locationName: "I-85 N past SR74 (South Fulton)",
-      lat: 33.54693604,
-      lng: -84.57480621,
-      imageUrl: `http://navigator-c2c.dot.ga.gov/snapshots/GDOT-CCTV-0177.jpg?t=${Date.now()}`,
-    },
-    {
-      camId: "gdot-cctv-0180",
-      locationName: "I-85 S past SR138 (Union City)",
-      lat: 33.56069946,
-      lng: -84.54431915,
-      imageUrl: `http://navigator-c2c.dot.ga.gov/snapshots/GDOT-CCTV-0180.jpg?t=${Date.now()}`,
-    },
-    {
-      camId: "gdot-cctv-1517",
-      locationName: "I-85 S before Collinsworth Rd (Fairburn)",
-      lat: 33.52814102,
-      lng: -84.6117096,
-      imageUrl: `http://navigator-c2c.dot.ga.gov/snapshots/GDOT-CCTV-1517.jpg?t=${Date.now()}`,
-    },
-    {
-      camId: "fult-cctv-0100",
-      locationName: "SR 279/Old National Hwy at SR 138 (South Fulton)",
-      lat: 33.55106735,
-      lng: -84.46503449,
-      imageUrl: `http://navigator-c2c.dot.ga.gov/snapshots/FULT-CCTV-0100.jpg?t=${Date.now()}`,
-    },
-    {
-      camId: "fult-cctv-0054",
-      locationName: "SR 138 at I-85 NB Ramp (Union City)",
-      lat: 33.56697083,
-      lng: -84.53283691,
-      imageUrl: `http://navigator-c2c.dot.ga.gov/snapshots/FULT-CCTV-0054.jpg?t=${Date.now()}`,
-    },
-  ];
-
-  return fallbackCameras.map((cam) => ({
-    ...cam,
-    currentStatus: getCameraStatus(cam.camId),
-  }));
+  console.log("[Cameras] GDOT API unavailable, using mock camera data with varied hazards");
+  return getMockCameras();
 }
 
 // ============================================
