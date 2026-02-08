@@ -59,7 +59,7 @@ export function ReportTypeSelector({
 }: ReportTypeSelectorProps) {
   return (
     <div className="space-y-3">
-      <label className="text-sm font-medium text-gray-700">
+      <label className="text-sm font-medium text-foreground">
         What would you like to report?
       </label>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -70,19 +70,19 @@ export function ReportTypeSelector({
             onClick={() => onSelect(option.type)}
             className={cn(
               "flex flex-col items-center justify-center gap-2 rounded-xl border-2 p-4 transition-all min-h-[100px]",
-              "hover:border-green-500 hover:bg-green-50/50",
-              "focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2",
+              "hover:border-orange-500/50 hover:bg-orange-500/5",
+              "focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-background",
               selectedType === option.type
-                ? "border-green-600 bg-green-50 text-green-700"
-                : "border-gray-200 bg-white text-gray-600"
+                ? "border-orange-500 bg-orange-500/10 text-orange-400"
+                : "border-border/50 bg-card/50 text-muted-foreground"
             )}
           >
             <div
               className={cn(
                 "rounded-full p-2",
                 selectedType === option.type
-                  ? "bg-green-100 text-green-600"
-                  : "bg-gray-100 text-gray-500"
+                  ? "bg-orange-500/20 text-orange-400"
+                  : "bg-secondary/50 text-muted-foreground"
               )}
             >
               {option.icon}

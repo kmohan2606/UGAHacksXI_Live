@@ -50,15 +50,15 @@ function ReportCard({ report }: ReportCardProps) {
   const typeInfo = getReportTypeInfo(report.type);
 
   return (
-    <Card className="p-4 hover:shadow-md transition-shadow">
+    <Card className="p-4 hover:shadow-md transition-shadow bg-card/50 border-border/50">
       <div className="flex gap-3">
         {/* Icon */}
         <div
           className={cn(
             "shrink-0 rounded-lg p-2.5",
             report.status === "resolved"
-              ? "bg-gray-100 text-gray-500"
-              : "bg-green-100 text-green-600"
+              ? "bg-secondary/50 text-muted-foreground"
+              : "bg-orange-500/20 text-orange-400"
           )}
         >
           {typeInfo.icon}
@@ -69,10 +69,10 @@ function ReportCard({ report }: ReportCardProps) {
           {/* Header */}
           <div className="flex items-start justify-between gap-2">
             <div>
-              <h4 className="font-medium text-gray-900 text-sm">
+              <h4 className="font-medium text-foreground text-sm">
                 {typeInfo.label}
               </h4>
-              <div className="flex items-center gap-1 text-xs text-gray-500 mt-0.5">
+              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
                 <Clock className="h-3 w-3" />
                 <span>{formatTimestamp(report.timestamp)}</span>
               </div>
@@ -82,11 +82,11 @@ function ReportCard({ report }: ReportCardProps) {
               className={cn(
                 "shrink-0 text-xs",
                 report.status === "verified" &&
-                  "bg-green-100 text-green-700 border-green-200",
+                  "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
                 report.status === "pending" &&
-                  "bg-amber-100 text-amber-700 border-amber-200",
+                  "bg-amber-500/20 text-amber-400 border-amber-500/30",
                 report.status === "resolved" &&
-                  "bg-gray-100 text-gray-600 border-gray-200"
+                  "bg-secondary/50 text-muted-foreground border-border/50"
               )}
               variant="outline"
             >
@@ -102,7 +102,7 @@ function ReportCard({ report }: ReportCardProps) {
 
           {/* Description */}
           {report.description && (
-            <p className="text-sm text-gray-600 line-clamp-2">
+            <p className="text-sm text-muted-foreground line-clamp-2">
               {report.description}
             </p>
           )}
@@ -110,7 +110,7 @@ function ReportCard({ report }: ReportCardProps) {
           {/* Footer */}
           <div className="flex items-center justify-between gap-2">
             {/* Location */}
-            <div className="flex items-center gap-1 text-xs text-gray-500">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <MapPin className="h-3 w-3" />
               <span>
                 {report.lat.toFixed(3)}, {report.lng.toFixed(3)}
@@ -119,7 +119,7 @@ function ReportCard({ report }: ReportCardProps) {
 
             {/* AI Verification Badge */}
             {report.verifiedByAi && (
-              <div className="flex items-center gap-1 text-xs text-green-600">
+              <div className="flex items-center gap-1 text-xs text-emerald-400">
                 <Sparkles className="h-3 w-3" />
                 <span>AI Verified</span>
               </div>
@@ -133,7 +133,7 @@ function ReportCard({ report }: ReportCardProps) {
 
 function ReportCardSkeleton() {
   return (
-    <Card className="p-4">
+    <Card className="p-4 bg-card/50 border-border/50">
       <div className="flex gap-3">
         <Skeleton className="h-11 w-11 rounded-lg shrink-0" />
         <div className="flex-1 space-y-2">
@@ -173,8 +173,8 @@ export function ReportsList() {
             className={cn(
               "px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors",
               statusFilter === filter.value
-                ? "bg-green-600 text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                ? "bg-orange-500 text-white"
+                : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
             )}
           >
             {filter.label}
@@ -191,9 +191,9 @@ export function ReportsList() {
             <ReportCardSkeleton />
           </>
         ) : isError ? (
-          <Card className="p-6 text-center">
-            <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
-            <p className="text-sm text-gray-600">
+          <Card className="p-6 text-center bg-card/50 border-border/50">
+            <AlertCircle className="h-8 w-8 text-destructive mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">
               Failed to load reports. Please try again.
             </p>
           </Card>
@@ -202,12 +202,12 @@ export function ReportsList() {
             <ReportCard key={report.reportId} report={report} />
           ))
         ) : (
-          <Card className="p-6 text-center">
-            <div className="rounded-full bg-gray-100 p-3 w-fit mx-auto mb-3">
-              <MapPin className="h-6 w-6 text-gray-400" />
+          <Card className="p-6 text-center bg-card/50 border-border/50">
+            <div className="rounded-full bg-secondary/50 p-3 w-fit mx-auto mb-3">
+              <MapPin className="h-6 w-6 text-muted-foreground" />
             </div>
-            <p className="text-sm font-medium text-gray-700">No reports yet</p>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-sm font-medium text-foreground">No reports yet</p>
+            <p className="text-xs text-muted-foreground mt-1">
               Be the first to report an issue in your area
             </p>
           </Card>

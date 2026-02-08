@@ -55,25 +55,25 @@ export function RouteCard({
 
   // Determine card border color based on hazard exposure
   const getBorderColor = () => {
-    if (route.isHazardAvoiding) return "border-emerald-300 bg-emerald-50/20";
-    if (hazardScore > 50) return "border-red-200 bg-red-50/20";
-    if (hazardScore > 20) return "border-amber-200 bg-amber-50/20";
+    if (route.isHazardAvoiding) return "border-emerald-500/30 bg-emerald-500/5";
+    if (hazardScore > 50) return "border-red-500/30 bg-red-500/5";
+    if (hazardScore > 20) return "border-amber-500/30 bg-amber-500/5";
     return "";
   };
 
   return (
     <Card
       className={cn(
-        "relative overflow-hidden transition-all duration-200 cursor-pointer hover:shadow-md",
+        "relative overflow-hidden transition-all duration-200 cursor-pointer hover:shadow-md bg-card/50 border-border/50",
         isSelected && "ring-2 ring-emerald-500 shadow-lg",
-        isRecommended && "border-emerald-200 bg-emerald-50/30",
+        isRecommended && "border-emerald-500/30 bg-emerald-500/5",
         !isRecommended && !isSelected && getBorderColor()
       )}
       onClick={onSelect}
     >
       {isRecommended && (
         <div className="absolute top-0 right-0">
-          <Badge className="rounded-none rounded-bl-lg bg-gradient-to-r from-violet-500 to-purple-600 text-white border-0 gap-1">
+          <Badge className="rounded-none rounded-bl-lg bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-0 gap-1">
             <Sparkles className="h-3 w-3" />
             Gemini Pick
           </Badge>
@@ -82,7 +82,7 @@ export function RouteCard({
 
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2 pr-20">
-          <h3 className="font-semibold text-lg text-gray-900 leading-tight">
+          <h3 className="font-semibold text-lg text-foreground leading-tight">
             {route.name}
           </h3>
         </div>
@@ -92,7 +92,7 @@ export function RouteCard({
           {route.isHazardAvoiding ? (
             <Badge
               variant="secondary"
-              className="bg-emerald-100 text-emerald-700 border-emerald-200 gap-1"
+              className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 gap-1"
             >
               <ShieldCheck className="h-3 w-3" />
               Hazard-Avoiding
@@ -103,7 +103,7 @@ export function RouteCard({
           {route.isEcoFriendly ? (
             <Badge
               variant="secondary"
-              className="bg-emerald-100 text-emerald-700 border-emerald-200 gap-1"
+              className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 gap-1"
             >
               <Leaf className="h-3 w-3" />
               Eco
@@ -114,9 +114,9 @@ export function RouteCard({
           {route.co2SavedKg !== undefined && route.co2SavedKg > 0 ? (
             <Badge
               variant="secondary"
-              className="bg-green-100 text-green-700 border-green-200 gap-1"
+              className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 gap-1"
             >
-              -{route.co2SavedKg.toFixed(1)} kg CO₂
+              -{route.co2SavedKg.toFixed(1)} kg CO2
             </Badge>
           ) : null}
 
@@ -124,10 +124,10 @@ export function RouteCard({
           {route.co2Kg !== undefined ? (
             <Badge
               variant="secondary"
-              className="bg-gray-100 text-gray-600 border-gray-200 gap-1"
+              className="bg-secondary/50 text-muted-foreground border-border/50 gap-1"
             >
               <Cloud className="h-3 w-3" />
-              {route.co2Kg.toFixed(1)} kg CO₂
+              {route.co2Kg.toFixed(1)} kg CO2
             </Badge>
           ) : null}
 
@@ -138,10 +138,10 @@ export function RouteCard({
               className={cn(
                 "gap-1",
                 safetyScore >= 80
-                  ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                  ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
                   : safetyScore >= 50
-                  ? "bg-amber-100 text-amber-700 border-amber-200"
-                  : "bg-red-100 text-red-700 border-red-200"
+                  ? "bg-amber-500/20 text-amber-400 border-amber-500/30"
+                  : "bg-red-500/20 text-red-400 border-red-500/30"
               )}
             >
               <Shield className="h-3 w-3" />
@@ -156,10 +156,10 @@ export function RouteCard({
               className={cn(
                 "gap-1",
                 hazardScore > 50
-                  ? "bg-red-100 text-red-700 border-red-200"
+                  ? "bg-red-500/20 text-red-400 border-red-500/30"
                   : hazardScore > 20
-                  ? "bg-amber-100 text-amber-700 border-amber-200"
-                  : "bg-yellow-100 text-yellow-700 border-yellow-200"
+                  ? "bg-amber-500/20 text-amber-400 border-amber-500/30"
+                  : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
               )}
             >
               <AlertTriangle className="h-3 w-3" />
@@ -168,7 +168,7 @@ export function RouteCard({
           ) : (
             <Badge
               variant="secondary"
-              className="bg-emerald-50 text-emerald-600 border-emerald-200 gap-1"
+              className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 gap-1"
             >
               <ShieldCheck className="h-3 w-3" />
               Hazard-free
@@ -180,14 +180,14 @@ export function RouteCard({
       <CardContent className="space-y-4">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-gray-500" />
-            <span className="font-medium text-gray-900">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <span className="font-medium text-foreground">
               {formatDuration(route.durationMinutes)}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Route className="h-4 w-4 text-gray-500" />
-            <span className="font-medium text-gray-900">
+            <Route className="h-4 w-4 text-muted-foreground" />
+            <span className="font-medium text-foreground">
               {formatDistance(route.distanceKm)}
             </span>
           </div>
@@ -201,7 +201,7 @@ export function RouteCard({
         {route.steps.length > 0 && (
           <Collapsible open={isDirectionsOpen} onOpenChange={setIsDirectionsOpen}>
             <CollapsibleTrigger
-              className="flex items-center gap-2 text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors w-full justify-between py-2"
+              className="flex items-center gap-2 text-sm font-medium text-emerald-400 hover:text-emerald-300 transition-colors w-full justify-between py-2"
               onClick={(e) => e.stopPropagation()}
             >
               <span>{isDirectionsOpen ? "Hide" : "Show"} directions</span>
@@ -212,12 +212,12 @@ export function RouteCard({
               )}
             </CollapsibleTrigger>
             <CollapsibleContent className="pt-2">
-              <ol className="space-y-2 border-l-2 border-emerald-200 pl-4 ml-1">
+              <ol className="space-y-2 border-l-2 border-emerald-500/30 pl-4 ml-1">
                 {route.steps.map((step, index) => (
                   <li key={index} className="relative">
                     <div className="absolute -left-[1.375rem] top-1 w-2 h-2 rounded-full bg-emerald-500" />
-                    <div className="text-sm text-gray-700">{step.instruction}</div>
-                    <div className="text-xs text-gray-500 mt-0.5">
+                    <div className="text-sm text-foreground/80">{step.instruction}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
                       {formatDistance(step.distanceKm)} - {formatDuration(step.durationMinutes)}
                     </div>
                   </li>
@@ -249,7 +249,7 @@ function RoutePolyline({
   const gradientId = `routeGrad-${isHazardAvoiding ? "avoid" : ""}${isEcoFriendly ? "eco" : "fast"}`;
 
   return (
-    <div className="relative h-8 w-full overflow-hidden rounded-lg bg-gray-100">
+    <div className="relative h-8 w-full overflow-hidden rounded-lg bg-secondary/50">
       <svg viewBox="0 0 200 30" className="w-full h-full" preserveAspectRatio="none">
         <defs>
           <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">

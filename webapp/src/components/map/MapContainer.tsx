@@ -74,7 +74,7 @@ function createReportMarkerIcon(report: CommunityReport, isSelected: boolean): L
 
   const size = isSelected ? 38 : 30;
   const selectedRing = isSelected
-    ? `<div style="position:absolute;inset:-4px;border-radius:6px;border:2px solid #a3e635;box-shadow:0 0 8px #a3e63580;"></div>`
+    ? `<div style="position:absolute;inset:-4px;border-radius:6px;border:2px solid #60a5fa;box-shadow:0 0 8px #60a5fa80;"></div>`
     : "";
 
   // Diamond/rounded-square shape to distinguish from camera circles
@@ -93,7 +93,7 @@ function createReportMarkerIcon(report: CommunityReport, isSelected: boolean): L
           ${iconSvg}
         </svg>
       </div>
-      ${report.verifiedByAi ? `<div style="position:absolute;top:-4px;right:-4px;width:14px;height:14px;border-radius:50%;background:#22c55e;border:2px solid #15803d;display:flex;align-items:center;justify-content:center;">
+      ${report.verifiedByAi ? `<div style="position:absolute;top:-4px;right:-4px;width:14px;height:14px;border-radius:50%;background:#3b82f6;border:2px solid #1d4ed8;display:flex;align-items:center;justify-content:center;">
         <svg viewBox="0 0 24 24" width="8" height="8"><path d="M20 6L9 17l-5-5" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>` : ""}
     </div>
@@ -119,7 +119,7 @@ function createMarkerIcon(camera: Camera, isSelected: boolean): L.DivIcon {
     ? `<div style="position:absolute;inset:-6px;border-radius:50%;border:2px solid ${colors.fill};opacity:0.4;animation:leaflet-marker-ping 1.5s cubic-bezier(0,0,0.2,1) infinite;"></div>`
     : "";
   const selectedRing = isSelected
-    ? `<div style="position:absolute;inset:-4px;border-radius:50%;border:2px solid #22c55e;box-shadow:0 0 8px #22c55e80;"></div>`
+    ? `<div style="position:absolute;inset:-4px;border-radius:50%;border:2px solid #60a5fa;box-shadow:0 0 8px #60a5fa80;"></div>`
     : "";
 
   const html = `
@@ -426,7 +426,7 @@ export function MapContainer({
         }
         .leaflet-control-zoom a {
           background-color: hsl(160, 20%, 10%) !important;
-          color: #a3e635 !important;
+          color: #60a5fa !important;
           border-color: hsl(155, 30%, 20%) !important;
         }
         .leaflet-control-zoom a:hover {

@@ -72,8 +72,8 @@ export function PhotoCapture({ imageBase64, onImageChange }: PhotoCaptureProps) 
   if (imageBase64) {
     return (
       <div className="space-y-3">
-        <label className="text-sm font-medium text-gray-700">Photo</label>
-        <div className="relative rounded-xl overflow-hidden border-2 border-green-200 bg-green-50">
+        <label className="text-sm font-medium text-foreground">Photo</label>
+        <div className="relative rounded-xl overflow-hidden border-2 border-orange-500/30 bg-orange-500/5">
           <img
             src={`data:image/jpeg;base64,${imageBase64}`}
             alt="Report preview"
@@ -84,7 +84,7 @@ export function PhotoCapture({ imageBase64, onImageChange }: PhotoCaptureProps) 
               type="button"
               size="icon"
               variant="secondary"
-              className="h-8 w-8 bg-white/90 hover:bg-white shadow-md"
+              className="h-8 w-8 bg-card/90 hover:bg-card shadow-md"
               onClick={handleCameraClick}
             >
               <RotateCcw className="h-4 w-4" />
@@ -122,26 +122,26 @@ export function PhotoCapture({ imageBase64, onImageChange }: PhotoCaptureProps) 
 
   return (
     <div className="space-y-3">
-      <label className="text-sm font-medium text-gray-700">
+      <label className="text-sm font-medium text-foreground">
         Add a Photo (optional)
       </label>
       <div
         className={cn(
           "border-2 border-dashed rounded-xl p-6 text-center transition-all",
           isProcessing
-            ? "border-green-400 bg-green-50"
-            : "border-gray-300 hover:border-green-400 hover:bg-green-50/30"
+            ? "border-orange-500/50 bg-orange-500/5"
+            : "border-border/50 hover:border-orange-500/40 hover:bg-orange-500/5"
         )}
       >
         <div className="flex flex-col items-center gap-4">
-          <div className="rounded-full p-4 bg-gray-100 text-gray-400">
+          <div className="rounded-full p-4 bg-secondary/50 text-muted-foreground">
             <Camera className="h-8 w-8" />
           </div>
           <div className="space-y-1">
-            <p className="text-sm font-medium text-gray-700">
+            <p className="text-sm font-medium text-foreground">
               {isProcessing ? "Processing..." : "Add a photo to help verify the issue"}
             </p>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               Photos help our AI verify reports faster
             </p>
           </div>
@@ -152,7 +152,7 @@ export function PhotoCapture({ imageBase64, onImageChange }: PhotoCaptureProps) 
               size="sm"
               onClick={handleCameraClick}
               disabled={isProcessing}
-              className="gap-2"
+              className="gap-2 border-border/50"
             >
               <Camera className="h-4 w-4" />
               Take Photo
@@ -163,7 +163,7 @@ export function PhotoCapture({ imageBase64, onImageChange }: PhotoCaptureProps) 
               size="sm"
               onClick={handleUploadClick}
               disabled={isProcessing}
-              className="gap-2"
+              className="gap-2 border-border/50"
             >
               <Upload className="h-4 w-4" />
               Upload

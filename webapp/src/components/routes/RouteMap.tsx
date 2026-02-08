@@ -320,7 +320,7 @@ export function RouteMap({
   return (
     <div
       className={cn(
-        "relative w-full rounded-xl overflow-hidden border border-gray-200 shadow-sm",
+        "relative w-full rounded-xl overflow-hidden border border-border/50 shadow-sm",
         className
       )}
       style={{ height: "400px" }}

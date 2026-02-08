@@ -36,35 +36,35 @@ export function RouteInput({ onSubmit, isLoading = false }: RouteInputProps) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-3">
         <div className="relative">
-          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-emerald-600" />
+          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-emerald-400" />
           <Input
             type="text"
             placeholder="Your location"
             value={origin}
             onChange={(e) => setOrigin(e.target.value)}
-            className="pl-11 h-12 bg-white border-gray-200 focus:border-emerald-500 focus:ring-emerald-500/20"
+            className="pl-11 h-12 bg-card/50 border-border/50 focus:border-emerald-500 focus:ring-emerald-500/20"
             disabled={isLoading}
           />
         </div>
 
         <div className="relative">
-          <Navigation className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-emerald-600" />
+          <Navigation className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-emerald-400" />
           <Input
             type="text"
             placeholder="Where to?"
             value={destination}
             onChange={(e) => setDestination(e.target.value)}
-            className="pl-11 h-12 bg-white border-gray-200 focus:border-emerald-500 focus:ring-emerald-500/20"
+            className="pl-11 h-12 bg-card/50 border-border/50 focus:border-emerald-500 focus:ring-emerald-500/20"
             disabled={isLoading}
           />
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 p-4 bg-emerald-50/50 rounded-xl border border-emerald-100">
+      <div className="flex flex-col gap-3 p-4 bg-emerald-500/5 rounded-xl border border-emerald-500/20">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Leaf className="h-4 w-4 text-emerald-600" />
-            <Label htmlFor="prefer-eco" className="text-sm font-medium text-gray-700 cursor-pointer">
+            <Leaf className="h-4 w-4 text-emerald-400" />
+            <Label htmlFor="prefer-eco" className="text-sm font-medium text-foreground cursor-pointer">
               Prefer eco-friendly route
             </Label>
           </div>
@@ -81,8 +81,8 @@ export function RouteInput({ onSubmit, isLoading = false }: RouteInputProps) {
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-amber-600" />
-            <Label htmlFor="avoid-hazards" className="text-sm font-medium text-gray-700 cursor-pointer">
+            <AlertTriangle className="h-4 w-4 text-amber-400" />
+            <Label htmlFor="avoid-hazards" className="text-sm font-medium text-foreground cursor-pointer">
               Avoid hazards
             </Label>
           </div>

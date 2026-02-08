@@ -72,16 +72,16 @@ export function ReportForm({ onSuccess }: ReportFormProps) {
   // Success state
   if (submittedReport) {
     return (
-      <Card className="p-6 border-2 border-green-200 bg-gradient-to-b from-green-50 to-white">
+      <Card className="p-6 border-2 border-orange-500/30 bg-orange-500/5">
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center justify-center rounded-full p-3 bg-green-100">
-            <CheckCircle2 className="h-8 w-8 text-green-600" />
+          <div className="inline-flex items-center justify-center rounded-full p-3 bg-orange-500/20">
+            <CheckCircle2 className="h-8 w-8 text-orange-400" />
           </div>
           <div className="space-y-1">
-            <h3 className="text-lg font-semibold text-green-800">
+            <h3 className="text-lg font-semibold text-foreground">
               Report Submitted!
             </h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               Thank you for helping improve Atlanta's infrastructure
             </p>
           </div>
@@ -91,23 +91,23 @@ export function ReportForm({ onSuccess }: ReportFormProps) {
             className={cn(
               "rounded-lg p-4 text-left",
               submittedReport.verifiedByAi
-                ? "bg-green-100 border border-green-200"
-                : "bg-amber-50 border border-amber-200"
+                ? "bg-emerald-500/10 border border-emerald-500/30"
+                : "bg-amber-500/10 border border-amber-500/30"
             )}
           >
             <div className="flex items-start gap-3">
               {submittedReport.verifiedByAi ? (
-                <Sparkles className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
+                <Sparkles className="h-5 w-5 text-emerald-400 shrink-0 mt-0.5" />
               ) : (
-                <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                <AlertCircle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
               )}
               <div className="space-y-1">
                 <p
                   className={cn(
                     "font-medium text-sm",
                     submittedReport.verifiedByAi
-                      ? "text-green-700"
-                      : "text-amber-700"
+                      ? "text-emerald-400"
+                      : "text-amber-400"
                   )}
                 >
                   {submittedReport.verifiedByAi
@@ -115,11 +115,11 @@ export function ReportForm({ onSuccess }: ReportFormProps) {
                     : "Pending Review"}
                 </p>
                 {submittedReport.aiExplanation ? (
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-foreground/80">
                     {submittedReport.aiExplanation}
                   </p>
                 ) : (
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     Your report has been submitted and will be reviewed shortly.
                   </p>
                 )}
@@ -129,7 +129,7 @@ export function ReportForm({ onSuccess }: ReportFormProps) {
 
           <Button
             onClick={handleReset}
-            className="bg-green-600 hover:bg-green-700 text-white"
+            className="bg-orange-500 hover:bg-orange-600 text-white"
           >
             Submit Another Report
           </Button>
@@ -154,7 +154,7 @@ export function ReportForm({ onSuccess }: ReportFormProps) {
 
       {/* Description */}
       <div className="space-y-3">
-        <label className="text-sm font-medium text-gray-700">
+        <label className="text-sm font-medium text-foreground">
           Additional Details (optional)
         </label>
         <Textarea
@@ -162,14 +162,14 @@ export function ReportForm({ onSuccess }: ReportFormProps) {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
-          className="resize-none"
+          className="resize-none bg-card/50 border-border/50"
         />
       </div>
 
       {/* Error Message */}
       {createReport.isError && (
-        <div className="rounded-lg bg-red-50 border border-red-200 p-3">
-          <p className="text-sm text-red-600">
+        <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-3">
+          <p className="text-sm text-destructive">
             {createReport.error instanceof Error
               ? createReport.error.message
               : "Failed to submit report. Please try again."}
@@ -183,8 +183,8 @@ export function ReportForm({ onSuccess }: ReportFormProps) {
         disabled={!isValid || createReport.isPending}
         className={cn(
           "w-full h-12 text-base font-medium gap-2",
-          "bg-green-600 hover:bg-green-700 text-white",
-          "disabled:bg-gray-300 disabled:text-gray-500"
+          "bg-orange-500 hover:bg-orange-600 text-white",
+          "disabled:bg-secondary disabled:text-muted-foreground"
         )}
       >
         {createReport.isPending ? (
@@ -202,7 +202,7 @@ export function ReportForm({ onSuccess }: ReportFormProps) {
 
       {/* Validation Hint */}
       {!isValid && (
-        <p className="text-xs text-gray-500 text-center">
+        <p className="text-xs text-muted-foreground text-center">
           {!selectedType && !location
             ? "Select a report type and set your location to submit"
             : !selectedType

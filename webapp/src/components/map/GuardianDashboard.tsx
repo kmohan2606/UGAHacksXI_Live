@@ -151,8 +151,8 @@ export function GuardianDashboard() {
       <header className="flex-shrink-0 border-b border-border/50 bg-card/50 backdrop-blur-md z-20">
         <div className="px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-primary" />
+            <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+              <Shield className="w-5 h-5 text-blue-400" />
             </div>
             <div>
               <h1 className="text-lg font-bold text-foreground tracking-tight">Guardian</h1>
@@ -294,7 +294,7 @@ export function GuardianDashboard() {
               onClick={() => setShowReports(!showReports)}
               className={cn(
                 "bg-card/90 backdrop-blur-sm border border-border/50",
-                showReports && "bg-emerald-600/90 border-emerald-500/50 text-white"
+                showReports && "bg-blue-600/90 border-blue-500/50 text-white"
               )}
             >
               <Binoculars className="w-4 h-4 mr-2" />
@@ -328,8 +328,8 @@ export function GuardianDashboard() {
               {showReports && verifiedReports && verifiedReports.length > 0 && (
                 <>
                   <div className="flex items-center gap-2 px-1 pt-1 pb-2">
-                    <Binoculars className="w-4 h-4 text-emerald-400" />
-                    <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
+                    <Binoculars className="w-4 h-4 text-blue-400" />
+                    <span className="text-xs font-semibold text-blue-400 uppercase tracking-wider">
                       Scout Reports ({verifiedReports.length})
                     </span>
                   </div>
@@ -397,8 +397,8 @@ export function GuardianDashboard() {
                   {showReports && verifiedReports && verifiedReports.length > 0 && (
                     <>
                       <div className="flex items-center gap-2 px-1 pb-1">
-                        <Binoculars className="w-3.5 h-3.5 text-emerald-400" />
-                        <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
+                        <Binoculars className="w-3.5 h-3.5 text-blue-400" />
+                        <span className="text-xs font-semibold text-blue-400 uppercase tracking-wider">
                           Scout Reports
                         </span>
                       </div>
@@ -460,7 +460,7 @@ export function GuardianDashboard() {
           <SheetHeader className="p-4 pb-0">
             <div className="flex items-center justify-between">
               <SheetTitle className="text-foreground flex items-center gap-2">
-                <Binoculars className="w-5 h-5 text-emerald-400" />
+                <Binoculars className="w-5 h-5 text-blue-400" />
                 Scout Report
               </SheetTitle>
               <Button
@@ -517,19 +517,19 @@ function ReportDetailCard({ report }: { report: CommunityReport }) {
       <div className={cn(
         "rounded-lg p-4",
         report.verifiedByAi
-          ? "bg-emerald-500/10 border border-emerald-500/30"
+          ? "bg-blue-500/10 border border-blue-500/30"
           : "bg-amber-500/10 border border-amber-500/30"
       )}>
         <div className="flex items-start gap-3">
           {report.verifiedByAi ? (
-            <Sparkles className="h-5 w-5 text-emerald-400 shrink-0 mt-0.5" />
+            <Sparkles className="h-5 w-5 text-blue-400 shrink-0 mt-0.5" />
           ) : (
             <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
           )}
           <div className="space-y-1">
             <p className={cn(
               "font-medium text-sm",
-              report.verifiedByAi ? "text-emerald-400" : "text-amber-400"
+              report.verifiedByAi ? "text-blue-400" : "text-amber-400"
             )}>
               {report.verifiedByAi ? "AI Verified" : "Pending Review"}
             </p>
@@ -559,7 +559,7 @@ function ReportDetailCard({ report }: { report: CommunityReport }) {
         <Badge
           className={cn(
             "border",
-            report.status === "verified" && "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+            report.status === "verified" && "bg-blue-500/20 text-blue-400 border-blue-500/30",
             report.status === "pending" && "bg-amber-500/20 text-amber-400 border-amber-500/30",
             report.status === "resolved" && "bg-zinc-500/20 text-zinc-400 border-zinc-500/30"
           )}
@@ -598,7 +598,7 @@ function ReportCardCompact({ report, onClick }: { report: CommunityReport; onCli
         <div className="flex items-center gap-2">
           <span className="font-medium text-sm text-foreground truncate">{config.label}</span>
           {report.verifiedByAi && (
-            <Sparkles className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+            <Sparkles className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
           )}
         </div>
         <div className="flex items-center gap-2 mt-0.5">
@@ -608,7 +608,7 @@ function ReportCardCompact({ report, onClick }: { report: CommunityReport; onCli
           <Badge
             className={cn(
               "text-[10px] px-1.5 py-0 border",
-              report.status === "verified" && "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+              report.status === "verified" && "bg-blue-500/20 text-blue-400 border-blue-500/30",
               report.status === "pending" && "bg-amber-500/20 text-amber-400 border-amber-500/30",
             )}
           >
@@ -632,7 +632,7 @@ function StatBadge({ icon: Icon, label, value, loading, variant = "default" }: S
   const colorClasses = {
     default: "text-foreground",
     warning: "text-amber-400",
-    success: "text-emerald-400",
+    success: "text-blue-400",
   };
 
   return (

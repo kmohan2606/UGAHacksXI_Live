@@ -19,10 +19,10 @@ interface EnvironmentalBadgesProps {
 
 export function EnvironmentalBadges({ data, className }: EnvironmentalBadgesProps) {
   const getAqiColor = (aqi: number) => {
-    if (aqi <= 50) return "bg-green-100 text-green-700 border-green-200";
-    if (aqi <= 100) return "bg-yellow-100 text-yellow-700 border-yellow-200";
-    if (aqi <= 150) return "bg-orange-100 text-orange-700 border-orange-200";
-    return "bg-red-100 text-red-700 border-red-200";
+    if (aqi <= 50) return "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
+    if (aqi <= 100) return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
+    if (aqi <= 150) return "bg-orange-500/20 text-orange-400 border-orange-500/30";
+    return "bg-red-500/20 text-red-400 border-red-500/30";
   };
 
   const getAqiLabel = (aqi: number) => {
@@ -57,7 +57,7 @@ export function EnvironmentalBadges({ data, className }: EnvironmentalBadgesProp
   return (
     <div
       className={cn(
-        "flex flex-wrap gap-2 p-3 bg-white rounded-xl border border-gray-100 shadow-sm",
+        "flex flex-wrap gap-2 p-3 bg-card/50 rounded-xl border border-border/50 backdrop-blur-sm",
         className
       )}
     >
@@ -73,21 +73,21 @@ export function EnvironmentalBadges({ data, className }: EnvironmentalBadgesProp
         icon={<Thermometer className="h-4 w-4" />}
         label="Temp"
         value={`${Math.round(data.temperature)}°F`}
-        className="bg-blue-50 text-blue-700 border-blue-200"
+        className="bg-blue-500/20 text-blue-400 border-blue-500/30"
       />
 
       <BadgeItem
         icon={getWeatherIcon(data.weatherCondition)}
         label="Weather"
         value={data.weatherCondition}
-        className="bg-gray-50 text-gray-700 border-gray-200"
+        className="bg-secondary/50 text-muted-foreground border-border/50"
       />
 
       <BadgeItem
         icon={<Droplets className="h-4 w-4" />}
         label="Humidity"
         value={`${data.humidity}%`}
-        className="bg-cyan-50 text-cyan-700 border-cyan-200"
+        className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30"
       />
 
       {shouldShowUv && (
@@ -96,7 +96,7 @@ export function EnvironmentalBadges({ data, className }: EnvironmentalBadgesProp
           label="UV"
           value={`${data.uvIndex}`}
           sublabel="High"
-          className="bg-amber-100 text-amber-700 border-amber-200"
+          className="bg-amber-500/20 text-amber-400 border-amber-500/30"
         />
       )}
     </div>

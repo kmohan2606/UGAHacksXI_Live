@@ -32,21 +32,21 @@ export function RoutePlanner() {
   const hasHazards = hazardsOnRoute.length > 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-emerald-50/30 py-6 px-4">
+    <div className="min-h-screen bg-background py-6 px-4">
       <div className="max-w-4xl mx-auto space-y-6">
         <header className="text-center space-y-2">
           <div className="flex items-center justify-center gap-2">
-            <div className="p-2 bg-emerald-600 rounded-xl">
-              <MapPin className="h-6 w-6 text-white" />
+            <div className="p-2 bg-emerald-500/20 rounded-xl">
+              <MapPin className="h-6 w-6 text-emerald-400" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">Route Planner</h1>
+            <h1 className="text-2xl font-bold text-foreground">Route Planner</h1>
           </div>
-          <p className="text-gray-600 text-sm">
+          <p className="text-muted-foreground text-sm">
             AI-powered eco-friendly route recommendations with real-time hazard avoidance
           </p>
         </header>
 
-        <section className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <section className="bg-card/50 rounded-2xl p-4 shadow-sm border border-border/50 backdrop-blur-sm">
           <RouteInput onSubmit={handleSubmit} isLoading={isLoading} />
         </section>
 
@@ -80,18 +80,18 @@ export function RoutePlanner() {
 
             {/* Hazard alert banner */}
             {hasHazards && (
-              <Alert className="bg-amber-50 border-amber-200">
-                <Shield className="h-4 w-4 text-amber-600" />
-                <AlertTitle className="text-amber-800">
+              <Alert className="bg-amber-500/10 border-amber-500/30">
+                <Shield className="h-4 w-4 text-amber-400" />
+                <AlertTitle className="text-amber-400">
                   {hazardsOnRoute.length} Hazard{hazardsOnRoute.length > 1 ? "s" : ""} Detected Near Your Route
                 </AlertTitle>
-                <AlertDescription className="text-amber-700">
+                <AlertDescription className="text-amber-400/80">
                   {hazardsOnRoute.map((h) => {
                     const sourceLabel = h.source === "camera" ? "cam" : "report";
                     return `${h.type} (${sourceLabel}, severity ${h.severity}/10)`;
                   }).join(" · ")}
                   {data.routes.some((r) => r.isHazardAvoiding) ? (
-                    <span className="block mt-1 font-medium text-emerald-700">
+                    <span className="block mt-1 font-medium text-emerald-400">
                       Hazard-avoiding routes have been generated automatically.
                     </span>
                   ) : null}
@@ -106,7 +106,7 @@ export function RoutePlanner() {
 
             {/* Route cards */}
             <section className="space-y-4">
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-lg font-semibold text-foreground">
                 Available Routes ({data.routes.length})
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -132,8 +132,8 @@ export function RoutePlanner() {
         )}
 
         {!data && !isLoading && !error && (
-          <div className="text-center py-12 text-gray-500">
-            <MapPin className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+          <div className="text-center py-12 text-muted-foreground">
+            <MapPin className="h-12 w-12 mx-auto mb-4 text-muted-foreground/40" />
             <p>Enter your origin and destination to get started</p>
           </div>
         )}

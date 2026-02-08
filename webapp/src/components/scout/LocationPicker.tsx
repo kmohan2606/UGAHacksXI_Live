@@ -80,42 +80,14 @@ export function LocationPicker({
           );
         }
       },
-      (error) => {
-        console.error("Geolocation error (fast):", error);
-
-        // Fast attempt failed — try one more time with longer timeout and no high accuracy requirement
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            onLocationChangeRef.current({
-              lat: position.coords.latitude,
-              lng: position.coords.longitude,
-              address: "Current location",
-            });
-            setIsLocating(false);
-          },
-          (retryError) => {
-            console.error("Geolocation retry error:", retryError);
-            let errorMessage = "Unable to get your location";
-            switch (retryError.code) {
-              case retryError.PERMISSION_DENIED:
-                errorMessage = "Location permission denied. Please enable location access.";
-                break;
-              case retryError.POSITION_UNAVAILABLE:
-                errorMessage = "Location information unavailable";
-                break;
-              case retryError.TIMEOUT:
-                errorMessage = "Location request timed out. Try again or use a default.";
-                break;
-            }
-            setLocationError(errorMessage);
-            setIsLocating(false);
-          },
-          {
-            enableHighAccuracy: false,
-            timeout: 15000,
-            maximumAge: 120000,
-          }
-        );
+      () => {
+        // Geolocation failed — auto-fallback to default coordinates
+        onLocationChangeRef.current({
+          lat: ATLANTA_DEFAULT.lat,
+          lng: ATLANTA_DEFAULT.lng,
+          address: "Default location (auto)",
+        });
+        setIsLocating(false);
       },
       {
         enableHighAccuracy: false,
@@ -153,10 +125,10 @@ export function LocationPicker({
   if (location) {
     return (
       <div className="space-y-3">
-        <label className="text-sm font-medium text-gray-700">Location</label>
-        <div className="rounded-xl border-2 border-green-200 bg-green-50 p-4">
+        <label className="text-sm font-medium text-foreground">Location</label>
+        <div className="rounded-xl border-2 border-orange-500/30 bg-orange-500/5 p-4">
           <div className="flex items-start gap-3">
-            <div className="rounded-full p-2 bg-green-100 text-green-600 shrink-0">
+            <div className="rounded-full p-2 bg-orange-500/20 text-orange-400 shrink-0">
               {isRefining ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
@@ -164,10 +136,10 @@ export function LocationPicker({
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-green-700 text-sm">
+              <p className="font-medium text-orange-400 text-sm">
                 {location.address || "Location selected"}
               </p>
-              <p className="text-xs text-green-600 mt-0.5">
+              <p className="text-xs text-orange-400/70 mt-0.5">
                 {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
                 {isRefining ? " · Refining accuracy..." : ""}
               </p>
@@ -177,7 +149,7 @@ export function LocationPicker({
               variant="ghost"
               size="sm"
               onClick={handleClear}
-              className="text-green-600 hover:text-green-700 hover:bg-green-100 shrink-0"
+              className="text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 shrink-0"
             >
               Change
             </Button>
@@ -189,7 +161,7 @@ export function LocationPicker({
 
   return (
     <div className="space-y-3">
-      <label className="text-sm font-medium text-gray-700">Location</label>
+      <label className="text-sm font-medium text-foreground">Location</label>
       <div className="space-y-3">
         {/* Current Location Button */}
         <Button
@@ -197,34 +169,34 @@ export function LocationPicker({
           variant="outline"
           className={cn(
             "w-full justify-start gap-3 h-auto py-3",
-            "border-2 hover:border-green-400 hover:bg-green-50/50"
+            "border-2 border-border/50 hover:border-orange-500/50 hover:bg-orange-500/5"
           )}
           onClick={handleUseCurrentLocation}
           disabled={isLocating}
         >
           {isLocating ? (
-            <Loader2 className="h-5 w-5 animate-spin text-green-600" />
+            <Loader2 className="h-5 w-5 animate-spin text-orange-400" />
           ) : (
-            <Navigation className="h-5 w-5 text-green-600" />
+            <Navigation className="h-5 w-5 text-orange-400" />
           )}
           <div className="text-left">
-            <div className="font-medium">
+            <div className="font-medium text-foreground">
               {isLocating ? "Getting location..." : "Use Current Location"}
             </div>
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-muted-foreground">
               Allow location access for accurate reporting
             </div>
           </div>
         </Button>
 
         {locationError && (
-          <div className="rounded-lg bg-red-50 border border-red-200 p-3">
-            <p className="text-sm text-red-600">{locationError}</p>
+          <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-3">
+            <p className="text-sm text-destructive">{locationError}</p>
             <Button
               type="button"
               variant="link"
               size="sm"
-              className="text-red-600 p-0 h-auto mt-1"
+              className="text-destructive p-0 h-auto mt-1"
               onClick={handleUseAtlantaDefault}
             >
               Use Atlanta default instead
@@ -235,17 +207,17 @@ export function LocationPicker({
         {/* Divider */}
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-gray-200" />
+            <span className="w-full border-t border-border/50" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-white px-2 text-gray-500">or enter address</span>
+            <span className="bg-card px-2 text-muted-foreground">or enter address</span>
           </div>
         </div>
 
         {/* Manual Address Input */}
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="text"
               placeholder="Enter address or intersection"
@@ -257,7 +229,7 @@ export function LocationPicker({
                   handleManualSubmit();
                 }
               }}
-              className="pl-10"
+              className="pl-10 bg-card/50 border-border/50"
             />
           </div>
           <Button
@@ -265,6 +237,7 @@ export function LocationPicker({
             variant="outline"
             onClick={handleManualSubmit}
             disabled={!manualAddress.trim()}
+            className="border-border/50"
           >
             Set
           </Button>
