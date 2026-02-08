@@ -1,0 +1,174 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here.
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* GreenCommute ATL - Eco Guardian Theme */
+    --background: 160 20% 4%;
+    --foreground: 150 10% 96%;
+
+    --card: 160 18% 7%;
+    --card-foreground: 150 10% 96%;
+
+    --popover: 160 18% 8%;
+    --popover-foreground: 150 10% 96%;
+
+    /* Primary: Vibrant eco green */
+    --primary: 155 80% 45%;
+    --primary-foreground: 160 20% 4%;
+
+    --secondary: 160 15% 14%;
+    --secondary-foreground: 150 10% 96%;
+
+    --muted: 160 12% 16%;
+    --muted-foreground: 150 8% 55%;
+
+    /* Accent: Warning amber for hazards */
+    --accent: 38 95% 55%;
+    --accent-foreground: 160 20% 4%;
+
+    /* Destructive: Alert red for active hazards */
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 98%;
+
+    /* Success: Safe route green */
+    --success: 145 70% 45%;
+    --success-foreground: 160 20% 4%;
+
+    /* Warning: Caution yellow */
+    --warning: 45 95% 50%;
+    --warning-foreground: 160 20% 4%;
+
+    --border: 160 12% 18%;
+    --input: 160 12% 18%;
+    --ring: 155 80% 45%;
+
+    --radius: 0.75rem;
+
+    /* Guardian theme gradients */
+    --guardian-green: 155 80% 45%;
+    --guardian-teal: 175 70% 40%;
+    --guardian-blue: 200 75% 50%;
+
+    --sidebar-background: 160 18% 6%;
+    --sidebar-foreground: 150 10% 96%;
+    --sidebar-primary: 155 80% 45%;
+    --sidebar-primary-foreground: 160 20% 4%;
+    --sidebar-accent: 160 15% 14%;
+    --sidebar-accent-foreground: 150 10% 96%;
+    --sidebar-border: 160 12% 18%;
+    --sidebar-ring: 155 80% 45%;
+  }
+
+  .dark {
+    --background: 160 20% 4%;
+    --foreground: 150 10% 96%;
+
+    --card: 160 18% 7%;
+    --card-foreground: 150 10% 96%;
+
+    --popover: 160 18% 8%;
+    --popover-foreground: 150 10% 96%;
+
+    --primary: 155 80% 45%;
+    --primary-foreground: 160 20% 4%;
+
+    --secondary: 160 15% 14%;
+    --secondary-foreground: 150 10% 96%;
+
+    --muted: 160 12% 16%;
+    --muted-foreground: 150 8% 55%;
+
+    --accent: 38 95% 55%;
+    --accent-foreground: 160 20% 4%;
+
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 98%;
+
+    --success: 145 70% 45%;
+    --success-foreground: 160 20% 4%;
+
+    --warning: 45 95% 50%;
+    --warning-foreground: 160 20% 4%;
+
+    --border: 160 12% 18%;
+    --input: 160 12% 18%;
+    --ring: 155 80% 45%;
+
+    --sidebar-background: 160 18% 6%;
+    --sidebar-foreground: 150 10% 96%;
+    --sidebar-primary: 155 80% 45%;
+    --sidebar-primary-foreground: 160 20% 4%;
+    --sidebar-accent: 160 15% 14%;
+    --sidebar-accent-foreground: 150 10% 96%;
+    --sidebar-border: 160 12% 18%;
+    --sidebar-ring: 155 80% 45%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'DM Sans', sans-serif;
+  }
+}
+
+/* Custom animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s ease-out forwards;
+}
+
+.animate-fade-in-left {
+  animation: fade-in-left 0.3s ease-out forwards;
+}
+
+/* Safe area for mobile bottom navigation */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom);
+}
