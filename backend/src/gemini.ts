@@ -19,14 +19,14 @@ function parseJsonFromResponse(text: string): any {
   // Try direct parse
   try {
     return JSON.parse(text);
-  } catch {}
+  } catch { }
 
   // Try extracting from markdown code blocks
   const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
   if (codeBlockMatch) {
     try {
       return JSON.parse(codeBlockMatch[1]!.trim());
-    } catch {}
+    } catch { }
   }
 
   // Try finding a JSON object in the text
@@ -34,7 +34,7 @@ function parseJsonFromResponse(text: string): any {
   if (objectMatch) {
     try {
       return JSON.parse(objectMatch[0]!);
-    } catch {}
+    } catch { }
   }
 
   throw new Error("Failed to parse JSON from Gemini response");
@@ -90,7 +90,7 @@ async function callGeminiAPI(
     // Clean up temp file
     try {
       unlinkSync(tempFile);
-    } catch {}
+    } catch { }
 
     if (proc.exitCode !== 0) {
       throw new Error(`Gemini API curl failed with exit code ${proc.exitCode}`);
@@ -117,7 +117,7 @@ async function callGeminiAPI(
     // Clean up temp file on error
     try {
       unlinkSync(tempFile);
-    } catch {}
+    } catch { }
     throw error;
   }
 }
@@ -250,7 +250,7 @@ export async function generateRouteRecommendation(
     source: h.source,
   }));
 
-  const prompt = `You are GreenCommute AI, an intelligent commute advisor for Atlanta, Georgia. Based on the following real-time data, recommend the best route. Factor in hazard avoidance, air quality, and carbon emissions.
+  const prompt = `You are LumenRoute AI, an intelligent commute advisor for Atlanta, Georgia. Based on the following real-time data, recommend the best route. Factor in hazard avoidance, air quality, and carbon emissions.
 
 Available Routes (with per-route hazard and emission data):
 ${JSON.stringify(routeSummary, null, 2)}

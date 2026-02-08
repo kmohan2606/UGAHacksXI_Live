@@ -66,7 +66,7 @@ reportsRouter.post(
     // and store the resulting URL in imageUrl
     let imageUrl: string | undefined;
     if (body.imageBase64) {
-      imageUrl = `https://storage.greencommute.atl/reports/${reportId}.jpg`;
+      imageUrl = `https://storage.lumenroute.ai/reports/${reportId}.jpg`;
     }
 
     // Perform AI verification if image is provided (with mock fallback)

@@ -39,7 +39,7 @@ export function RouteInput({ onSubmit, isLoading = false }: RouteInputProps) {
           <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-emerald-400" />
           <Input
             type="text"
-            placeholder="Your location"
+            placeholder="Your location (e.g. Georgia Tech, Atlanta)"
             value={origin}
             onChange={(e) => setOrigin(e.target.value)}
             className="pl-11 h-12 bg-card/50 border-border/50 focus:border-emerald-500 focus:ring-emerald-500/20 text-foreground"
@@ -51,7 +51,7 @@ export function RouteInput({ onSubmit, isLoading = false }: RouteInputProps) {
           <Navigation className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-emerald-400" />
           <Input
             type="text"
-            placeholder="Where to?"
+            placeholder="Destination (e.g. Hartsfield-Jackson Airport)"
             value={destination}
             onChange={(e) => setDestination(e.target.value)}
             className="pl-11 h-12 bg-card/50 border-border/50 focus:border-emerald-500 focus:ring-emerald-500/20 text-foreground"

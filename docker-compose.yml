@@ -1,0 +1,48 @@
+# LumenRoute AI - Docker Compose Configuration
+# For Digital Ocean deployment
+
+services:
+  # Backend API (Bun)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: lumenroute-backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      # API Keys - pass from host environment or .env file
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}
+      - OPENWEATHERMAP_API_KEY=${OPENWEATHERMAP_API_KEY}
+      - AIRNOW_API_KEY=${AIRNOW_API_KEY}
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - lumenroute-network
+
+  # Frontend (React + Nginx)
+  webapp:
+    build:
+      context: ./webapp
+      dockerfile: Dockerfile
+    container_name: lumenroute-webapp
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - lumenroute-network
+
+networks:
+  lumenroute-network:
+    driver: bridge

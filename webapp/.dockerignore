@@ -1,0 +1,31 @@
+# Dependencies
+node_modules
+.bun
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Build artifacts (will be generated inside container)
+dist
+coverage
+
+# Development files
+*.log
+.DS_Store
+*.local
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+.dockerignore

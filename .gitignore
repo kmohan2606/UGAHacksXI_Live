@@ -1,18 +1,37 @@
-# Runtime
-.bun
-.bun/
+# Dependencies
 node_modules/
+.bun/
 backend/node_modules/
 webapp/node_modules/
 
-# Environment
+# Environment Variables
 .env
+.env.local
 .env.*
 !.env.example
 
-# OS
+# Build Outputs
+dist/
+dist-ssr/
+build/
+out/
+coverage/
+*.tsbuildinfo
+
+# OS System Files
 .DS_Store
 Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDE & Editor Configs
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+*.sublime-project
+*.sublime-workspace
 
 # Logs
 logs
@@ -20,15 +39,21 @@ logs
 npm-debug.log*
 yarn-debug.log*
 pnpm-debug.log*
+bun.lockb
+!backend/bun.lockb
+!webapp/bun.lockb
 
-# Build
-dist
-out
-build
-coverage
+# Testing & Coverage
+lcov.info
 
-# IDE
-.vscode
-.idea
-*.swp
-*.swo
+# AI & Special Directories
+.claude/
+.gemini/
+.cursor/
+
+# Docker
+docker-compose.override.yml
+
+# Temporary Files
+tmp/
+temp/

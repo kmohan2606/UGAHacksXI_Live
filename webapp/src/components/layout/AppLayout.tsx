@@ -25,6 +25,14 @@ export function AppLayout() {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Determine cursor trail hue based on current route
+  // Guardian/Scout = Blue (210), Routes = Green (155), Home = Green (155)
+  const getCursorHue = () => {
+    const path = location.pathname;
+    if (path === "/guardian" || path === "/scout") return 210; // Blue
+    return 155; // Green (default for Routes and Home)
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Mystical grid background */}
@@ -60,8 +68,8 @@ export function AppLayout() {
         />
       </div>
 
-      {/* Cursor trail */}
-      <CursorTrail />
+      {/* Cursor trail with route-based color */}
+      <CursorTrail hue={getCursorHue()} />
 
       {/* Desktop sidebar */}
       <aside
@@ -84,7 +92,7 @@ export function AppLayout() {
           <LayoutGrid className="w-5 h-5 flex-shrink-0" />
           {sidebarExpanded && (
             <span className="text-sm font-bold text-foreground tracking-tight whitespace-nowrap">
-              GreenCommute
+              LumenRoute AI
             </span>
           )}
         </button>
@@ -198,10 +206,10 @@ export function AppLayout() {
             </div>
             <div className="flex flex-col">
               <span className="text-lg font-bold text-foreground tracking-tight">
-                GreenCommute ATL
+                LumenRoute AI
               </span>
               <span className="text-[10px] font-medium text-primary/80 tracking-wider uppercase">
-                Guardian Edition
+                Smart Commute
               </span>
             </div>
           </div>

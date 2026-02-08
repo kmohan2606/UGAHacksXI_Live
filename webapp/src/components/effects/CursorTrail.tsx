@@ -10,10 +10,21 @@ interface Particle {
   size: number;
 }
 
-export function CursorTrail() {
+interface CursorTrailProps {
+  /** HSL hue for the trail color (0-360). Default: 155 (green) */
+  hue?: number;
+}
+
+export function CursorTrail({ hue = 155 }: CursorTrailProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const rafRef = useRef<number>(0);
+  const hueRef = useRef(hue);
+
+  // Keep hue ref in sync
+  useEffect(() => {
+    hueRef.current = hue;
+  }, [hue]);
 
   const addParticles = useCallback((x: number, y: number) => {
     const count = 2 + Math.floor(Math.random() * 2);
@@ -66,6 +77,8 @@ export function CursorTrail() {
 
       ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
+      const currentHue = hueRef.current;
+
       particlesRef.current = particlesRef.current.filter((p) => {
         p.life -= dt / p.maxLife;
         if (p.life <= 0) return false;
@@ -81,8 +94,8 @@ export function CursorTrail() {
         ctx.save();
         ctx.globalAlpha = alpha;
         ctx.shadowBlur = 15;
-        ctx.shadowColor = "hsl(155, 80%, 45%)";
-        ctx.fillStyle = `hsla(155, 80%, 55%, ${alpha})`;
+        ctx.shadowColor = `hsl(${currentHue}, 80%, 45%)`;
+        ctx.fillStyle = `hsla(${currentHue}, 80%, 55%, ${alpha})`;
         ctx.beginPath();
         ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
         ctx.fill();
@@ -109,3 +122,4 @@ export function CursorTrail() {
     />
   );
 }
+
