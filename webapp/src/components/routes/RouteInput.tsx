@@ -42,7 +42,7 @@ export function RouteInput({ onSubmit, isLoading = false }: RouteInputProps) {
             placeholder="Your location"
             value={origin}
             onChange={(e) => setOrigin(e.target.value)}
-            className="pl-11 h-12 bg-card/50 border-border/50 focus:border-emerald-500 focus:ring-emerald-500/20"
+            className="pl-11 h-12 bg-card/50 border-border/50 focus:border-emerald-500 focus:ring-emerald-500/20 text-foreground"
             disabled={isLoading}
           />
         </div>
@@ -54,7 +54,7 @@ export function RouteInput({ onSubmit, isLoading = false }: RouteInputProps) {
             placeholder="Where to?"
             value={destination}
             onChange={(e) => setDestination(e.target.value)}
-            className="pl-11 h-12 bg-card/50 border-border/50 focus:border-emerald-500 focus:ring-emerald-500/20"
+            className="pl-11 h-12 bg-card/50 border-border/50 focus:border-emerald-500 focus:ring-emerald-500/20 text-foreground"
             disabled={isLoading}
           />
         </div>

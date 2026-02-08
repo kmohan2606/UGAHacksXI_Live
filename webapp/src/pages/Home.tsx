@@ -53,9 +53,9 @@ const features = [
     icon: Camera,
     detailIcon: Users,
     path: "/scout",
-    gradient: "from-amber-500 to-orange-500",
-    bgGradient: "from-amber-500/10 to-orange-500/5",
-    shadowColor: "shadow-amber-500/20",
+    gradient: "from-blue-500 to-cyan-500",
+    bgGradient: "from-blue-500/10 to-cyan-500/5",
+    shadowColor: "shadow-blue-500/20",
     highlights: ["Community reporting", "Infrastructure tracking", "Crowd-verified data"],
   },
 ];
@@ -212,27 +212,9 @@ function FooterSection() {
           </Button>
         </Link>
 
-        {/* Sponsors */}
+        {/* Footer tagline */}
         <div className="border-t border-border/50 pt-8">
-          <div className="inline-flex items-center gap-2 mb-4">
-            <Trophy className="w-4 h-4 text-amber-400" />
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Hackathon Project
-            </span>
-          </div>
-
-          <div className="flex items-center justify-center gap-8 flex-wrap">
-            {sponsors.map((sponsor) => (
-              <div
-                key={sponsor.name}
-                className="text-muted-foreground/60 text-sm font-medium hover:text-muted-foreground transition-colors"
-              >
-                {sponsor.label}
-              </div>
-            ))}
-          </div>
-
-          <div className="flex items-center justify-center gap-2 mt-6 text-xs text-muted-foreground/40">
+          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground/40">
             <Leaf className="w-3 h-3" />
             <span>Powered by AI vision</span>
           </div>
@@ -261,7 +243,7 @@ export default function Home() {
             className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold text-foreground mb-6 tracking-tight animate-fade-in-up"
             style={{ animationDelay: "100ms" }}
           >
-            <span className="text-primary">Green</span>Commute
+            <span className="text-primary text-shiny-green">Green</span>Commute
             <br />
             <span className="text-muted-foreground/60">ATL</span>
           </h1>

@@ -8,7 +8,7 @@ import { reportsRouter } from "./routes/reports";
 import { routesRouter } from "./routes/routes";
 import { logger } from "hono/logger";
 
-const app = new Hono();
+export const app = new Hono();
 
 // CORS middleware - validates origin against allowlist
 const allowed = [

@@ -12,15 +12,15 @@ export function ScoutMode() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-orange-500/10 border-b border-orange-500/20 px-4 py-6 pb-12">
+      <div className="bg-blue-500/10 border-b border-blue-500/20 px-4 py-6 pb-12">
         <div className="max-w-lg mx-auto">
           <div className="flex items-center gap-3 mb-3">
-            <div className="rounded-full bg-orange-500/20 p-2">
-              <Binoculars className="h-6 w-6 text-orange-400" />
+            <div className="rounded-full bg-blue-500/20 p-2">
+              <Binoculars className="h-6 w-6 text-blue-400" />
             </div>
             <h1 className="text-xl font-bold text-foreground">Scout Mode</h1>
           </div>
-          <p className="text-orange-300/70 text-sm leading-relaxed">
+          <p className="text-blue-300/70 text-sm leading-relaxed">
             Help improve Atlanta's green infrastructure by reporting issues you
             encounter. Your reports help the community and earn you eco-points!
           </p>
@@ -35,7 +35,7 @@ export function ScoutMode() {
               <TabsTrigger
                 value="new"
                 className={cn(
-                  "gap-2 data-[state=active]:bg-card data-[state=active]:text-orange-400",
+                  "gap-2 data-[state=active]:bg-card data-[state=active]:text-blue-400",
                   "data-[state=active]:shadow-sm"
                 )}
               >
@@ -45,7 +45,7 @@ export function ScoutMode() {
               <TabsTrigger
                 value="recent"
                 className={cn(
-                  "gap-2 data-[state=active]:bg-card data-[state=active]:text-orange-400",
+                  "gap-2 data-[state=active]:bg-card data-[state=active]:text-blue-400",
                   "data-[state=active]:shadow-sm"
                 )}
               >
@@ -73,7 +73,7 @@ export function ScoutMode() {
         {/* Eco Impact Footer */}
         <div className="mt-6 mb-8 text-center">
           <div className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-            <Leaf className="h-4 w-4 text-orange-400" />
+            <Leaf className="h-4 w-4 text-blue-400" />
             <span>Every report helps build a greener Atlanta</span>
           </div>
         </div>
@@ -81,3 +81,4 @@ export function ScoutMode() {
     </div>
   );
 }
+
